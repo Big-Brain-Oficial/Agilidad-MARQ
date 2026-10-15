@@ -23,7 +23,7 @@ interface ExperienceState {
   lockError: boolean;
   /** Bloquea el puntero (lo registra el control de primera persona). En táctil sólo empieza a jugar. */
   lock: () => void;
-  /** Controles táctiles (iPhone/iPad) en lugar de mouse y teclado. */
+  /** Controles táctiles (Android, iPhone/iPad) en lugar de mouse y teclado. */
   touch: boolean;
   setTouch: (touch: boolean) => void;
   /** Ejecuta la acción disponible, como la tecla E (lo registra el visitante). */

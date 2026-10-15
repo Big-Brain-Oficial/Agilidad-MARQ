@@ -16,10 +16,7 @@ export const touchInput = {
   },
 };
 
-/**
- * iPhone o iPad. La primera versión táctil se limita a iOS; el resto de los celulares sigue con el
- * aviso. iPadOS se presenta como Mac, así que se reconoce por la pantalla táctil.
- */
-export function isIOS() {
-  return /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+/** Habilita el control por capacidad táctil, tanto en Android como en iPhone/iPad. */
+export function hasTouchInput() {
+  return navigator.maxTouchPoints > 0;
 }
