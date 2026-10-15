@@ -5,4 +5,5 @@ out
 .vercel
 *.log
 *.tsbuildinfo
+*.blend1
 next-env.d.ts

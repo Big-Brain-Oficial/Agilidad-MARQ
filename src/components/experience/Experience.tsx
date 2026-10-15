@@ -9,6 +9,7 @@ import { useCurtain } from '@/components/transition/curtain-store';
 import { Hud } from './Hud';
 import { useExperience } from './store';
 import { World } from './World';
+import { isSoftwareRenderer } from './renderer';
 import styles from './Experience.module.css';
 
 // Recorrido 3D de un desarrollo. Se carga bajo demanda (next/dynamic) para que el mapa no
@@ -27,6 +28,7 @@ export default function Experience({ desarrollo, debug = false }: { desarrollo: 
   // No se dibuja hasta que los shaders están compilados: dibujar antes obliga al navegador a
   // esperar la compilación (en Windows/Direct3D puede congelar la página varios segundos).
   const [ready, setReady] = useState(false);
+  const [rendererReady, setRendererReady] = useState(false);
   const quality = useExperience((s) => s.quality);
 
   useLayoutEffect(() => {
@@ -48,7 +50,7 @@ export default function Experience({ desarrollo, debug = false }: { desarrollo: 
     <div className={styles.root}>
       <div id="marq-lock-target" className={styles.canvas}>
         <Canvas
-          shadows="percentage"
+          shadows={quality === 'alta' ? 'percentage' : false}
           frameloop={ready ? 'always' : 'never'}
           dpr={[1, quality === 'alta' ? 1.5 : 1]}
           camera={{ fov: 58, near: 0.06, far: 1500 }}
@@ -56,12 +58,20 @@ export default function Experience({ desarrollo, debug = false }: { desarrollo: 
           // duplicaba memoria de video y trabajo en cada cuadro.
           gl={{ antialias: false, powerPreference: 'high-performance' }}
           onCreated={({ gl }) => {
+            // Se consulta el contexto que dibujará la escena, sin crear otro canvas.
+            const software = isSoftwareRenderer(gl.getContext());
+            useExperience.getState().setSoftwareRenderer(software);
+            if (software) {
+              gl.shadowMap.enabled = false;
+              gl.setPixelRatio(1);
+            }
             gl.toneMapping = THREE.ACESFilmicToneMapping;
             gl.toneMappingExposure = 1.05;
+            setRendererReady(true);
           }}
         >
           <Suspense fallback={null}>
-            <World url={url} debug={debug} onReady={onReady} />
+            {rendererReady && <World url={url} debug={debug} onReady={onReady} />}
           </Suspense>
         </Canvas>
       </div>

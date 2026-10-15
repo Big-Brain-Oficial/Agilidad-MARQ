@@ -19,6 +19,16 @@ const HUELLA: [number, number][] = [
 // achica tanto el mapa que las torres del centro se amontonan. Se llega desde la lista.
 export const FUERA_DE_VISTA_GENERAL = new Set(['pueblo-mio']);
 
+// Desarrollos tan cercanos que, de lejos, sus tarjetas se pisan: hasta que el mapa los
+// encuadra a ellos solos se muestran en una sola tarjeta que, al tocarla, acerca el mapa.
+export const GRUPOS_MAPA = [
+  {
+    id: 'microcentro',
+    nombre: 'Microcentro',
+    desarrollos: ['torre-natalini', 'torre-vista', 'uno-boulevard', 'edificio-gaba', 'torre-nbch', 'torre-panorama'],
+  },
+];
+
 // ---- Escala de las maquetas --------------------------------------------------------
 //
 // Las maquetas usan una escala gráfica que cambia con el zoom: de lejos crecen para seguir
@@ -126,20 +136,23 @@ export function volumenNatalini(e: EscalaMaqueta = ESCALA_BASE): FeatureCollecti
   return { type: 'FeatureCollection', features };
 }
 
-/** Maquetas orientativas: no reproducen planos ni sustituyen los recorridos 360. */
+/**
+ * Maquetas orientativas: no reproducen planos ni sustituyen los recorridos 360.
+ * Cada volumen lleva el `estado` del desarrollo: el mapa dibuja los futuros en una capa translúcida.
+ */
 export function volumenesMarq(desarrollos: Desarrollo[], e: EscalaMaqueta = ESCALA_BASE): FeatureCollection<Polygon> {
   const features: Feature<Polygon>[] = [];
   for (const d of desarrollos) {
     if (!d.ubicacion) continue;
     if (d.id === 'torre-natalini') {
-      features.push(...volumenNatalini(e).features);
+      features.push(...volumenNatalini(e).features.map((f) => ({ ...f, properties: { ...f.properties, estado: d.estado } })));
       continue;
     }
     const origen: [number, number] = [d.ubicacion.longitud, d.ubicacion.latitud];
     const bloque = (x: number, y: number, ancho: number, fondo: number, base: number, altura: number, color: string) => {
       const coordinates = [[-ancho / 2, -fondo / 2], [ancho / 2, -fondo / 2], [ancho / 2, fondo / 2], [-ancho / 2, fondo / 2], [-ancho / 2, -fondo / 2]]
         .map(([a, b]) => desplazar(origen, (a + x) * e.planta, (b + y) * e.planta));
-      features.push({ type: 'Feature', properties: { desarrollo: d.id, base, altura, color }, geometry: { type: 'Polygon', coordinates: [coordinates] } });
+      features.push({ type: 'Feature', properties: { desarrollo: d.id, estado: d.estado, base, altura, color }, geometry: { type: 'Polygon', coordinates: [coordinates] } });
     };
     if (d.tipo === 'edificio') {
       const altura = ALTURA_EDIFICIO[d.id] ?? 78;
@@ -168,7 +181,7 @@ export function ubicacionesMarq(desarrollos: Desarrollo[]): FeatureCollection<Po
     type: 'FeatureCollection',
     features: desarrollos.flatMap(d => d.ubicacion ? [{
       type: 'Feature' as const,
-      properties: { desarrollo: d.id },
+      properties: { desarrollo: d.id, estado: d.estado },
       geometry: { type: 'Point' as const, coordinates: [d.ubicacion.longitud, d.ubicacion.latitud] },
     }] : []),
   };

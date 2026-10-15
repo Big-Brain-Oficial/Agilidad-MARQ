@@ -87,6 +87,7 @@ export function World({ url, debug, onReady }: { url: string; debug: boolean; on
     loader.setKTX2Loader(getKtx2Loader(gl) as unknown as Parameters<typeof loader.setKTX2Loader>[0]));
   const scene = useThree((s) => s.scene);
   const atmosphere = useExperience((s) => s.atmosphere);
+  const quality = useExperience((s) => s.quality);
   const sunlight = useRef<THREE.DirectionalLight>(null);
   const lastInterior = useRef<boolean | null>(null);
 
@@ -108,7 +109,7 @@ export function World({ url, debug, onReady }: { url: string; debug: boolean; on
   useEffect(() => {
     gl.toneMappingExposure = atmosphere === 'dia' ? 1.05 : .94;
     gl.shadowMap.needsUpdate = true;
-  }, [gl, atmosphere]);
+  }, [gl, atmosphere, quality]);
   const warmup = useRef(4);
   useEffect(() => {
     let cancelled = false;
@@ -173,7 +174,7 @@ export function World({ url, debug, onReady }: { url: string; debug: boolean; on
     <>
       <Sky renderOrder={-20} distance={2000} sunPosition={sunDir.clone().multiplyScalar(-1000).toArray()} turbidity={5} rayleigh={0.9} mieCoefficient={0.004} mieDirectionalG={0.82} />
       <fog attach="fog" args={['#dfe5e8', 140, 900]} />
-      <Environment files="/archviz/rooftop_day/hdri.hdr" environmentIntensity={0.65} />
+      <Environment files="/archviz/rooftop_day/hdri-1k.hdr" environmentIntensity={0.65} />
       <hemisphereLight args={['#e6eef5', '#b8ac98', 0.36]} />
       <primitive object={sunTarget} />
       <directionalLight
@@ -182,7 +183,7 @@ export function World({ url, debug, onReady }: { url: string; debug: boolean; on
         target={sunTarget}
         intensity={atmosphere === 'dia' ? 2.8 : 1.85}
         color={atmosphere === 'dia' ? '#fff4e4' : '#ffd8ab'}
-        castShadow
+        castShadow={quality === 'alta'}
         shadow-mapSize={[4096, 4096]}
         shadow-bias={-0.00006}
         shadow-normalBias={0.012}

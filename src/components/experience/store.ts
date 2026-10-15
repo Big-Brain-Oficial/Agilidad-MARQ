@@ -17,11 +17,15 @@ interface ExperienceState {
   info: string | null;
   /** Objeto cuya tarjeta de información está abierta, o null. */
   infoOpen: string | null;
+  /** Objeto cuyo símbolo «i» está bajo la mira (se abre con un clic), o null. */
+  aim: string | null;
   /** El navegador rechazó capturar el mouse (se puede reintentar con otro clic). */
   lockError: boolean;
   /** Bloquea el puntero (lo registra el control de primera persona). */
   lock: () => void;
   quality: 'alta' | 'fluida';
+  softwareRenderer: boolean;
+  setSoftwareRenderer: (softwareRenderer: boolean) => void;
   atmosphere: 'dia' | 'tarde';
   views: { id: string; label: string }[];
   visit: (id: string) => void;
@@ -33,8 +37,9 @@ interface ExperienceState {
   setPrompt: (prompt: string | null) => void;
   setRiding: (riding: boolean) => void;
   setInfo: (info: string | null) => void;
-  /** Abre la tarjeta del objeto que se mira, o cierra la que está abierta. */
-  toggleInfo: () => void;
+  setAim: (aim: string | null) => void;
+  /** Abre la tarjeta del objeto indicado (o del que se mira), o cierra la que está abierta. */
+  toggleInfo: (id?: string) => void;
   closeInfo: () => void;
   setLockError: (lockError: boolean) => void;
   setLock: (lock: () => void) => void;
@@ -49,9 +54,12 @@ export const useExperience = create<ExperienceState>((set, get) => ({
   riding: false,
   info: null,
   infoOpen: null,
+  aim: null,
   lockError: false,
   lock: () => {},
   quality: 'alta',
+  softwareRenderer: false,
+  setSoftwareRenderer: (softwareRenderer) => set(softwareRenderer ? { softwareRenderer, quality: 'fluida' } : { softwareRenderer }),
   atmosphere: 'dia',
   views: [],
   visit: () => {},
@@ -67,7 +75,10 @@ export const useExperience = create<ExperienceState>((set, get) => ({
   setInfo: (info) => {
     if (get().info !== info) set({ info });
   },
-  toggleInfo: () => set(({ info, infoOpen }) => ({ infoOpen: infoOpen ? null : info })),
+  setAim: (aim) => {
+    if (get().aim !== aim) set({ aim });
+  },
+  toggleInfo: (id) => set(({ info, infoOpen }) => ({ infoOpen: infoOpen ? null : (id ?? info) })),
   closeInfo: () => {
     if (get().infoOpen) set({ infoOpen: null });
   },
@@ -75,8 +86,8 @@ export const useExperience = create<ExperienceState>((set, get) => ({
   setLock: (lock) => set({ lock }),
   leave: () => {
     if (get().phase === 'leaving') return;
-    set({ phase: 'leaving', prompt: null, info: null, infoOpen: null });
+    set({ phase: 'leaving', prompt: null, info: null, infoOpen: null, aim: null });
     if (typeof document !== 'undefined' && document.pointerLockElement) document.exitPointerLock();
   },
-  reset: () => set({ phase: 'loading', zona: 'exterior', prompt: null, riding: false, info: null, infoOpen: null, lockError: false, views: [], visit: () => {}, lock: () => {} }),
+  reset: () => set({ phase: 'loading', zona: 'exterior', prompt: null, riding: false, info: null, infoOpen: null, aim: null, lockError: false, views: [], visit: () => {}, lock: () => {} }),
 }));

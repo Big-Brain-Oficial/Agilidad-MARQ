@@ -96,6 +96,21 @@
     ]
   },
   {
+    "id": "rooftop_day",
+    "resolution": "1k",
+    "source": "https://polyhaven.com/a/rooftop_day",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://polyhaven.com/license",
+    "files": [
+      {
+        "url": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/rooftop_day_1k.hdr",
+        "file": "/rooftop_day/hdri-1k.hdr",
+        "bytes": 1545499,
+        "sha256": "770f5e2f48d061041fd9bf4ee07b6f0b7e7ddd44a462021b21be0e513c597e1a"
+      }
+    ]
+  },
+  {
     "id": "modern_arm_chair_01",
     "resolution": "2k",
     "source": "https://polyhaven.com/a/modern_arm_chair_01",

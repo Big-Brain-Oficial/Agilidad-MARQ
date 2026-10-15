@@ -95,6 +95,7 @@ export function MapHub() {
           onMarkerClick={onMarkerClick}
           onHover={hover}
           onVistaGeneral={setEnVistaGeneral}
+          onIrAVistaGeneral={vistaGeneral}
         />
         <p className={styles.hint}>Arrastrá para explorar · rueda o pellizco para acercar</p>
       </section>

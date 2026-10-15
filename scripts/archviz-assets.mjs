@@ -11,6 +11,7 @@ const assets = [
   ['concrete_wall_006', '2k', ['diff', 'nor_gl', 'rough']],
   ['fabric_pattern_07', '2k', ['diff', 'nor_gl', 'rough']],
   ['rooftop_day', '2k', ['hdri']],
+  ['rooftop_day', '1k', ['hdri']],
   ['modern_arm_chair_01', '2k', ['gltf']],
   ['potted_plant_02', '2k', ['gltf']],
   // Plantas del hall en macetas altas. En 1K: se ven a uno o dos metros.
@@ -48,7 +49,9 @@ for (const [id, resolution, types] of assets) {
     const entry = formats[format];
     if (!entry?.url) throw new Error(`Falta formato ${id}/${type}/${format}`);
     const base = resolve(destination, id);
-    files.push(await save(entry.url, resolve(base, `${type}.${format}`)));
+    // Blender conserva el HDR 2K; la web descarga una variante independiente.
+    const name = type === 'hdri' && resolution === '1k' ? 'hdri-1k' : type;
+    files.push(await save(entry.url, resolve(base, `${name}.${format}`)));
     for (const [relative, dependency] of Object.entries(entry.include ?? {})) {
       const target = resolve(base, relative);
       if (!target.startsWith(base + '/'.replace('/', process.platform === 'win32' ? '\\' : '/'))) throw new Error('Ruta externa en asset');
