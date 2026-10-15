@@ -13,8 +13,6 @@ Plataforma inmobiliaria inmersiva para MARQ. Un **mapa geográfico en perspectiv
 
 ## 1. Stack
 
-La rama experimental `codex/unreal-natalini` agrega un proyecto Unreal Engine 5.7 en `unreal/Natalini` y una comparación en `/evaluacion/natalini`. La ruta `/recorrido/torre-natalini/unreal` abre bajo demanda el reproductor externo de Pixel Streaming 2; no descarga Three.js ni ejecuta Unreal en Vercel. El edificio se prepara con `unreal:prepare` y se importa con `unreal:import`. Alcance, requisitos y pendientes en [docs/UNREAL-NATALINI.md](docs/UNREAL-NATALINI.md).
-
 | Capa | Tecnología | Motivo |
 |---|---|---|
 | Framework | Next.js 16 (App Router) + TypeScript | Rutas compartibles, *code splitting* por ruta, deploy nativo en Vercel |
@@ -114,7 +112,7 @@ Si alguien entra directo por URL, la cortina se cierra al instante y funciona co
 ## 5. Primera persona y colisiones
 
 - **Controles**: *pointer lock* para mirar con el mouse. WASD o flechas para caminar, Shift para correr, E o clic para interactuar, I para ver información de un objeto cercano, Esc para pausar.
-- **Controles táctiles (iPhone/iPad)**: el iPhone no implementa *pointer lock*, así que en iOS (`ExperienceGate` lo detecta; iPadOS se presenta como Mac y se reconoce por la pantalla táctil) no se monta `PointerLockControls`. Un dedo en la mitad izquierda maneja un joystick que aparece donde se apoya: la inclinación regula la velocidad y estirar el pulgar más allá del aro hace correr. En la mitad derecha, arrastrar mira alrededor y un toque corto abre la información del objeto con el símbolo «i». Las acciones (ascensor, bus) y la información son botones; la pausa, un botón arriba a la derecha (y se pausa sola al salir de Safari). `TouchControls.tsx` escribe en un objeto mutable (`touchInput.ts`) que `Player` lee en cada cuadro, sin volver a dibujar React. Arranca en calidad «Fluida» con DPR hasta 1,5 y, con el teléfono vertical, el campo visual se abre hasta 85°. Android y otros celulares siguen con el aviso: es una primera versión limitada a iOS.
+- **Controles táctiles (Android, iPhone/iPad)**: `ExperienceGate` detecta capacidad táctil con `navigator.maxTouchPoints`, sin limitar el acceso por sistema operativo. En táctil no se monta `PointerLockControls`. Un dedo en la mitad izquierda maneja un joystick que aparece donde se apoya: la inclinación regula la velocidad y estirar el pulgar más allá del aro hace correr. En la mitad derecha, arrastrar mira alrededor y un toque corto abre la información del objeto con el símbolo «i». Las acciones (ascensor, bus) y la información son botones; la pausa, un botón arriba a la derecha (y se pausa sola al pasar a otra app). `TouchControls.tsx` escribe en un objeto mutable (`touchInput.ts`) que `Player` lee en cada cuadro, sin volver a dibujar React. Al perder la captura de un dedo se libera su control. Arranca en calidad «Fluida» con DPR 1; «Alta» permite hasta 1,5. Con el teléfono vertical, el campo visual se abre hasta 85°.
 - **Cuerpo**: una **cápsula** de 0,22 m de radio con los ojos a 1,65 m. El radio permite pasar por las puertas de 0,5 m que tiene el modelo.
 - **Colisión** (`collision.ts`): al cargar, las mallas `COL__*` se unen en una sola geometría en coordenadas de mundo y se construye un **BVH**. En cada paso, `shapecast` busca los triángulos cercanos y empuja la cápsula fuera de ellos. Se hacen 5 subpasos por cuadro para no atravesar paredes finas como los vidrios.
 - **Gravedad y escalones**: la cápsula cae y se apoya. Sube escalones menores a su radio, como el cordón de la vereda (11 cm) o el desnivel del terreno (15 cm).
@@ -162,14 +160,14 @@ Probado en Chrome (sin interfaz, vía DevTools Protocol) sobre el build de produ
   - Pararse sobre la cabina del ascensor y subir 30 m hasta el departamento.
   - Salir al pasillo, entrar al departamento y recorrer el estar.
   - Ver la indicación del bus, subir y volver al mapa.
-- **Celular:** el mapa se adapta. En iPhone/iPad el 3D usa los controles táctiles; en los demás celulares muestra un aviso.
+- **Celular:** el mapa se adapta. Android, iPhone/iPad y tablets con WebGL 2 usan los controles táctiles del recorrido 3D.
 
 El bloqueo del mouse no se puede probar sin interfaz: en ese caso se usa `?debug`, que expone `window.marq`.
 
 ## 9. Limitaciones y próximos pasos
 
 - **Modelo interpretativo**: medidas, piso y núcleo son provisionales (ver `modelos/Torre_Natalini/GUIA_MODELO.md`). Con los planos de MARQ se regenera y se vuelve a correr el pipeline.
-- **Celular**: los controles táctiles están habilitados sólo en iOS. Falta medir memoria y cuadros por segundo en iPhones de distintas generaciones (el GLB pesa ~30 MB y las texturas ocupan ~100 MB en la GPU) y, después, habilitar Android con el mismo control.
+- **Celular**: los controles táctiles están habilitados en Android y iOS. Falta evaluar memoria, fluidez y manejo en equipos reales de distintas gamas (el GLB pesa ~30 MB y las texturas ocupan ~100 MB en la GPU). Las pruebas visuales quedan a cargo del usuario.
 - **Escala a más edificios**: dividir cada GLB en exterior e interior y cargar el interior al acercarse al acceso. También se puede serializar el BVH en el build, en lugar de construirlo en el navegador.
 - **Materiales**: hornear iluminación y texturas PBR (madera, piedra) en Blender para un aspecto más realista sin costo en tiempo real.
 - **Contenido**: si MARQ necesita editar textos sin desarrolladores, migrar `src/content` a un CMS headless. La estructura de datos ya está separada.

@@ -6,10 +6,10 @@ import { useEffect, useState } from 'react';
 import { DESARROLLOS } from '@/content/desarrollos';
 import { useCurtain, useCurtainNavigate } from '@/components/transition/curtain-store';
 import { useExperience } from './store';
-import { isIOS } from './touchInput';
+import { hasTouchInput } from './touchInput';
 import styles from './Experience.module.css';
 
-// Decide si se puede abrir el recorrido 3D (computadoras con mouse y teclado, y iPhone/iPad con
+// Decide si se puede abrir el recorrido 3D (computadoras con mouse y teclado, y pantallas con
 // controles táctiles) y lo carga bajo demanda.
 
 const Experience = dynamic(() => import('./Experience'), { ssr: false });
@@ -21,8 +21,8 @@ function detect(): Support {
   if (!canvas.getContext('webgl2')) return 'no-webgl';
   const finePointer = window.matchMedia('(pointer: fine)').matches;
   if (finePointer && window.innerWidth >= 900) return 'ok';
-  // Un iPad con trackpad entra por arriba, con el mouse; los demás celulares, por ahora, no.
-  return isIOS() ? 'touch' : 'mobile';
+  // Un equipo con mouse y pantalla amplia entra por arriba; los teléfonos y tablets usan tacto.
+  return hasTouchInput() ? 'touch' : 'mobile';
 }
 
 export function ExperienceGate({ desarrolloId }: { desarrolloId: string }) {
@@ -48,11 +48,11 @@ export function ExperienceGate({ desarrolloId }: { desarrolloId: string }) {
     <main className={styles.mobile}>
       <div className={styles.panel}>
         <span className={styles.kicker}>Recorrido 3D · {desarrollo.nombre}</span>
-        <h1>{support === 'no-webgl' ? 'Abrilo en otro navegador' : 'Abrilo en una computadora o un iPhone'}</h1>
+        <h1>{support === 'no-webgl' ? 'Abrilo en otro navegador' : 'Usá una pantalla táctil o una computadora'}</h1>
         <p>
           {support === 'no-webgl'
             ? 'Tu navegador no permite gráficos 3D (WebGL 2). Probá con una versión actualizada de Chrome, Edge, Firefox o Safari.'
-            : 'Por ahora el recorrido en primera persona funciona con teclado y mouse, o en iPhone y iPad. En este equipo podés seguir explorando el mapa de desarrollos.'}
+            : 'El recorrido se puede manejar con teclado y mouse, o con controles táctiles en Android, iPhone y iPad. En este equipo podés seguir explorando el mapa de desarrollos.'}
         </p>
         <button type="button" className="btn btn-primary" onClick={() => void navigate('/', 'Volviendo al mapa')}>
           Volver al mapa

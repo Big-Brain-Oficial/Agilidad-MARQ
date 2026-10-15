@@ -5,7 +5,7 @@ import { useExperience } from './store';
 import { touchInput } from './touchInput';
 import styles from './Experience.module.css';
 
-// Controles táctiles (iPhone/iPad): un dedo en la mitad izquierda maneja un joystick que aparece
+// Controles táctiles (Android, iPhone/iPad): un dedo en la mitad izquierda maneja un joystick que aparece
 // donde se apoya; en la mitad derecha, arrastrar mira alrededor y tocar abre la información del
 // objeto con el símbolo «i». Escriben en touchInput, que el visitante lee en cada cuadro.
 
@@ -117,6 +117,7 @@ export function TouchControls() {
         onPointerMove={onMove}
         onPointerUp={onUp}
         onPointerCancel={onUp}
+        onLostPointerCapture={onUp}
         onContextMenu={(e) => e.preventDefault()}
       />
       <div ref={base} className={styles.stick} data-run="false" aria-hidden="true">

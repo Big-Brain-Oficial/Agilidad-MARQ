@@ -332,7 +332,7 @@
   color: var(--muted);
 }
 
-/* ---- Controles táctiles (iPhone/iPad) ------------------------------------------------ */
+/* ---- Controles táctiles (Android, iPhone/iPad) --------------------------------------- */
 
 /* Sin selección de texto, menú de mantener presionado ni gestos del navegador sobre la escena. */
 .root[data-touch] {
