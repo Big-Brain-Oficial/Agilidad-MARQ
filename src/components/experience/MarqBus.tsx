@@ -185,6 +185,17 @@ function makeGeometries() {
     frontLabel: new THREE.PlaneGeometry(1.0, 0.166),
     rearLabel: new THREE.PlaneGeometry(1.3, 0.216),
     sideLabel: new THREE.PlaneGeometry(2.8, 0.47),
+    // Retrovisor: brazo corto desde el parante delantero hacia afuera; el espejo queda por fuera del
+    // ancho del bus para que el conductor vea el costado hacia atrás.
+    mirrorArm: new THREE.TubeGeometry(
+      new THREE.CatmullRomCurve3([
+        new THREE.Vector3(L / 2 - 0.22, 2.42, SIDE - 0.02),
+        new THREE.Vector3(L / 2 - 0.12, 2.46, SIDE + 0.14),
+        new THREE.Vector3(L / 2 - 0.1, 2.36, SIDE + 0.27),
+      ]),
+      16, 0.024, 8
+    ),
+    mirrorGlass: shape(0.17, 0.3, 0.03),
   };
 }
 
@@ -335,6 +346,17 @@ export function MarqBus({ position }: { position: THREE.Vector3 }) {
         </group>
       </group>
       <RoundedBox args={[0.16, 0.3, W - 0.04]} radius={0.06} smoothness={3} position={[L / 2 - 0.02, 0.44, 0]} material={m.trim} castShadow />
+
+      {/* Retrovisores en ambas esquinas delanteras, con el espejo mirando hacia atrás. */}
+      {[1, -1].map((s) => (
+        <group key={s} scale-z={s}>
+          <mesh geometry={g.mirrorArm} material={m.black} castShadow />
+          <group position={[L / 2 - 0.1, 2.16, SIDE + 0.3]}>
+            <RoundedBox args={[0.09, 0.36, 0.22]} radius={0.035} smoothness={2} material={m.black} castShadow />
+            <mesh geometry={g.mirrorGlass} material={m.glass} position-x={-0.047} rotation-y={-Math.PI / 2} />
+          </group>
+        </group>
+      ))}
 
       {/* Trasera: luneta, rejilla del motor, faros y paragolpes. */}
       <group position={[-L / 2, 0, 0]} rotation-y={-Math.PI / 2}>
