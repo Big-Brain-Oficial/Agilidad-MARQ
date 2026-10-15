@@ -10,6 +10,9 @@
   --white: #ffffff;
   --accent: #a4070f;
   --accent-bright: #d0222b;
+  /* Código de tipo de desarrollo (los edificios usan --ink): igual en el panel y en el mapa. */
+  --tipo-barrio: #4f6b45;
+  --tipo-casas: #8a6a45;
   --radius: 14px;
   --shadow: 0 10px 30px rgba(29, 29, 31, 0.12);
   /* --font-display y --font-text las define next/font en <html> (layout.tsx). */

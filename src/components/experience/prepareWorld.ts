@@ -15,6 +15,11 @@ import { buildEntranceDoor, removeOpenLeaves, type EntranceDoor } from './entran
 export const BUS = { length: 11.5, width: 2.55, height: 3.35 };
 /** Puerta del bus respecto de su ancla: cerca del frente, del lado de la vereda (-z). */
 export const BUS_DOOR = new THREE.Vector3(3.6, 0, -1.3);
+/**
+ * Arranque del recorrido: en la calle, frente al acceso, con el basamento entero a la vista y el bus a
+ * la izquierda. Reemplaza a ANCLA__inicio del GLB; va acá para no regenerar el modelo por un punto.
+ */
+const INICIO = new THREE.Vector3(0.15, 0, 11.4);
 
 export interface LightAnchor {
   position: THREE.Vector3;
@@ -180,14 +185,14 @@ export function prepareWorld(scene: THREE.Object3D): WorldData {
     if (!o.name.startsWith('VISTA__')) return;
     views.push({ id: o.name.slice(7), label: String(o.userData.label), position: worldPos(o), target: fromBlender(o.userData.target) });
   });
-  views.push({ id: 'exterior', label: 'Acceso al edificio', position: worldPos(named('ANCLA__inicio')), target: worldPos(named('ANCLA__acceso')) });
-  // La llegada siempre comienza en la vereda, mirando al acceso del edificio.
+  views.push({ id: 'exterior', label: 'Acceso al edificio', position: INICIO.clone(), target: worldPos(named('ANCLA__acceso')) });
+  // La llegada siempre comienza en la calle, mirando al acceso del edificio.
   const initialLevel = 0;
   cabin.position.copy(stops[initialLevel].cabin);
 
   return {
     collider: buildCollider(colliders, [...walls, busBox]),
-    spawn: worldPos(named('ANCLA__inicio')),
+    spawn: INICIO.clone(),
     lookAt: worldPos(named('ANCLA__acceso')),
     bus,
     busDoor,

@@ -1,7 +1,7 @@
 'use client';
 
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
-import type { FilterSpecification, FlyToOptions, GeoJSONSource, Map as Mapa } from 'maplibre-gl';
+import type { ExpressionSpecification, FlyToOptions, GeoJSONSource, Map as Mapa } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import type { Desarrollo } from '@/content/desarrollos';
 import {
@@ -13,6 +13,7 @@ import {
   volumenesMarq,
 } from '@/content/mapa-resistencia';
 import { desplazarCentro, proyectar, type Camara } from './encuadre';
+import { TipoIcon } from './icons';
 import styles from './MapHub.module.css';
 
 export interface MapCanvasHandle {
@@ -42,6 +43,20 @@ const FOV = 24;
 const ZOOM_TARJETA_COMPLETA = 14.8;
 // Medida de una tarjeta compacta antes de poder medirla en pantalla (en celular es más chica).
 const tarjetaEstimada = (anchoMapa: number) => anchoMapa < 600 ? { ancho: 100, alto: 25 } : { ancho: 130, alto: 32 };
+
+// Los desarrollos futuros van en su propia capa, translúcida: la opacidad de fill-extrusion
+// es una sola por capa en MapLibre, no se puede variar por maqueta.
+const CAPA_VOLUMEN = 'marq-volumen';
+const CAPA_VOLUMEN_FUTURO = 'marq-volumen-futuro';
+const CAPAS_VOLUMEN = [CAPA_VOLUMEN, CAPA_VOLUMEN_FUTURO];
+const OPACIDAD_FUTURO = 0.45;
+
+const filtroVisibles = (visibles: Set<string>): ExpressionSpecification => ['in', ['get', 'desarrollo'], ['literal', [...visibles]]];
+const filtroVolumen = (visibles: Set<string>, futuro: boolean): ExpressionSpecification => [
+  'all',
+  filtroVisibles(visibles),
+  [futuro ? '==' : '!=', ['get', 'estado'], 'futuro'],
+];
 
 /** Punto de apoyo de la tarjeta (x, y) y su desplazamiento (dx, dy) respecto de ese punto. */
 interface Etiqueta { x: number; y: number; dx: number; dy: number; visible: boolean }
@@ -365,45 +380,48 @@ export const MapCanvas = forwardRef<MapCanvasHandle, Props>(function MapCanvas(p
           if (cancelado) return;
           clearTimeout(limiteCarga);
           const before = mapa.getStyle().layers.find(l => l.type === 'symbol')?.id;
-          const filtro: FilterSpecification = ['in', ['get', 'desarrollo'], ['literal', [...callbacks.current.visibles]]];
+          const { visibles } = callbacks.current;
           mapa.addSource('marq-ubicaciones', {
             type: 'geojson',
             data: ubicacionesMarq(desarrollos),
           });
           mapa.addLayer({
             id: 'marq-luz', type: 'circle', source: 'marq-ubicaciones',
-            filter: filtro,
+            filter: filtroVisibles(visibles),
             paint: {
               'circle-radius': ['interpolate', ['linear'], ['zoom'], ...paradasHalo()],
               'circle-color': '#ffdf8c',
               'circle-blur': 0.7,
-              'circle-opacity': 0.85,
+              // Los futuros brillan menos: todavía no están en la ciudad.
+              'circle-opacity': ['case', ['==', ['get', 'estado'], 'futuro'], 0.4, 0.85],
               'circle-pitch-alignment': 'map',
             },
           }, before);
           escala = escalaMaqueta(mapa.getZoom());
           mapa.addSource('marq', { type: 'geojson', data: volumenesMarq(desarrollos, escala) });
-          mapa.addLayer({
-            id: 'marq-volumen',
-            type: 'fill-extrusion',
-            source: 'marq',
-            filter: filtro,
-            paint: {
-              'fill-extrusion-color': ['get', 'color'],
-              'fill-extrusion-base': ['get', 'base'],
-              'fill-extrusion-height': ['get', 'altura'],
-              'fill-extrusion-opacity': 1,
-            },
-          }, before);
-          mapa.on('click', 'marq-volumen', (evento) => {
+          for (const futuro of [false, true]) {
+            mapa.addLayer({
+              id: futuro ? CAPA_VOLUMEN_FUTURO : CAPA_VOLUMEN,
+              type: 'fill-extrusion',
+              source: 'marq',
+              filter: filtroVolumen(visibles, futuro),
+              paint: {
+                'fill-extrusion-color': ['get', 'color'],
+                'fill-extrusion-base': ['get', 'base'],
+                'fill-extrusion-height': ['get', 'altura'],
+                'fill-extrusion-opacity': futuro ? OPACIDAD_FUTURO : 1,
+              },
+            }, before);
+          }
+          mapa.on('click', CAPAS_VOLUMEN, (evento) => {
             const desarrollo = desarrollos.find(d => d.id === evento.features?.[0]?.properties?.desarrollo);
             if (desarrollo) callbacks.current.onMarkerClick(desarrollo);
           });
-          mapa.on('mousemove', 'marq-volumen', (evento) => {
+          mapa.on('mousemove', CAPAS_VOLUMEN, (evento) => {
             mapa.getCanvas().style.cursor = 'pointer';
             callbacks.current.onHover(evento.features?.[0]?.properties?.desarrollo ?? null);
           });
-          mapa.on('mouseleave', 'marq-volumen', () => {
+          mapa.on('mouseleave', CAPAS_VOLUMEN, () => {
             mapa.getCanvas().style.cursor = '';
             callbacks.current.onHover(null);
           });
@@ -432,16 +450,18 @@ export const MapCanvas = forwardRef<MapCanvasHandle, Props>(function MapCanvas(p
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map?.getLayer('marq-volumen')) return;
-    const filtro: FilterSpecification = ['in', ['get', 'desarrollo'], ['literal', [...visibles]]];
-    map.setFilter('marq-volumen', filtro);
-    map.setFilter('marq-luz', filtro);
-    map.setPaintProperty('marq-volumen', 'fill-extrusion-color', [
-      'case',
-      ['all', ['==', ['get', 'color'], '#d7b277'], ['in', ['get', 'desarrollo'], ['literal', [selectedId, hoveredId].filter(Boolean)]]],
-      '#ebc989',
-      ['get', 'color'],
-    ]);
+    if (!map?.getLayer(CAPA_VOLUMEN)) return;
+    map.setFilter('marq-luz', filtroVisibles(visibles));
+    map.setFilter(CAPA_VOLUMEN, filtroVolumen(visibles, false));
+    map.setFilter(CAPA_VOLUMEN_FUTURO, filtroVolumen(visibles, true));
+    for (const capa of CAPAS_VOLUMEN) {
+      map.setPaintProperty(capa, 'fill-extrusion-color', [
+        'case',
+        ['all', ['==', ['get', 'color'], '#d7b277'], ['in', ['get', 'desarrollo'], ['literal', [selectedId, hoveredId].filter(Boolean)]]],
+        '#ebc989',
+        ['get', 'color'],
+      ]);
+    }
     reproyectar.current?.();
   }, [visibles, selectedId, hoveredId, estado]);
 
@@ -474,6 +494,7 @@ export const MapCanvas = forwardRef<MapCanvasHandle, Props>(function MapCanvas(p
                 style={{ transform: `translate(${p.dx}px, ${p.dy}px)` }}
                 data-active={activo ? '' : undefined}
                 data-selected={d.id === selectedId ? '' : undefined}
+                data-estado={d.estado}
                 aria-label={`Ver ficha de ${d.nombre}`}
                 onClick={() => props.onMarkerClick(d)}
                 onPointerEnter={() => props.onHover(d.id)}
@@ -481,8 +502,12 @@ export const MapCanvas = forwardRef<MapCanvasHandle, Props>(function MapCanvas(p
                 onFocus={() => props.onHover(d.id)}
                 onBlur={() => props.onHover(null)}
               >
-                <i aria-hidden="true" />
-                <span><small>MARQ</small>{d.nombre}<em>Explorá el desarrollo →</em></span>
+                <i className={styles.tipo} data-tipo={d.tipo} data-estado={d.estado} aria-hidden="true"><TipoIcon tipo={d.tipo} /></i>
+                <span>
+                  <small>{d.estado === 'futuro' ? d.etiquetaEstado ?? 'Próximamente' : 'MARQ'}</small>
+                  {d.nombre}
+                  <em>Explorá el desarrollo →</em>
+                </span>
               </button>
             </li>
           );

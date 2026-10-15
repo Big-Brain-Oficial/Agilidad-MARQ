@@ -50,7 +50,7 @@ export const OBJETOS_NATALINI: InfoObjeto[] = [
     nombre: 'Plantas del acceso',
     titulo: 'Verde para recibir',
     texto:
-      'Contra el vidrio del acceso, dos macetas altas levantan las plantas a la altura de la mirada. Sus hojas anchas suavizan el hormigón y la piedra clara, y reciben a quien entra desde la vereda.',
+      'Desde su planificación, diseño, construcción, y hasta su mantenimiento, tenemos un objetivo clave, minimizar el impacto ambiental.',
     datos: ['Macetas altas negras, en forma de reloj de arena', 'Plantas de hojas anchas', 'Ambientación ilustrativa'],
     marcador: [2.24, 2.05, -0.72],
   },
