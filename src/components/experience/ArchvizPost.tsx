@@ -8,6 +8,19 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { SSAOPass } from 'three/addons/postprocessing/SSAOPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { useExperience } from './store';
+import { SCENERY_LAYER } from './sceneryLayer';
+
+class ArchitecturalAO extends SSAOPass {
+  override render(...args: Parameters<SSAOPass['render']>) {
+    const mask = this.camera.layers.mask;
+    this.camera.layers.disable(SCENERY_LAYER);
+    try {
+      super.render(...args);
+    } finally {
+      this.camera.layers.mask = mask;
+    }
+  }
+}
 
 /**
  * Dibuja la escena en un búfer con antialiasing (el canvas no tiene) y aplica el tono y el color
@@ -26,7 +39,7 @@ export function ArchvizPost() {
     composer.addPass(render);
     let ao: SSAOPass | null = null;
     if (quality === 'alta') {
-      ao = new SSAOPass(scene, camera, 512, 512, 16);
+      ao = new ArchitecturalAO(scene, camera, 512, 512, 16);
       // Distancias normalizadas por el rango de profundidad del pass; radio en unidades de escena.
       ao.kernelRadius = .22;
       ao.minDistance = .00005;

@@ -171,7 +171,7 @@ export function World({ url, debug, onReady }: { url: string; debug: boolean; on
 
   return (
     <>
-      <Sky distance={2000} sunPosition={sunDir.clone().multiplyScalar(-1000).toArray()} turbidity={5} rayleigh={0.9} mieCoefficient={0.004} mieDirectionalG={0.82} />
+      <Sky renderOrder={-20} distance={2000} sunPosition={sunDir.clone().multiplyScalar(-1000).toArray()} turbidity={5} rayleigh={0.9} mieCoefficient={0.004} mieDirectionalG={0.82} />
       <fog attach="fog" args={['#dfe5e8', 140, 900]} />
       <Environment files="/archviz/rooftop_day/hdri.hdr" environmentIntensity={0.65} />
       <hemisphereLight args={['#e6eef5', '#b8ac98', 0.36]} />
