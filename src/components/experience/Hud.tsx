@@ -23,7 +23,7 @@ function Controls() {
         <span><kbd>E</kbd></span> Usar ascensor · subir al bus
       </li>
       <li>
-        <span><kbd>I</kbd></span> Información de los objetos con el símbolo «i»
+        <span><kbd>Clic</kbd><kbd>I</kbd></span> Información de los objetos con el símbolo «i»
       </li>
       <li>
         <span><kbd>Esc</kbd></span> Pausa
@@ -72,7 +72,8 @@ export function Hud({ desarrollo }: { desarrollo: Desarrollo }) {
   const lockError = useExperience((s) => s.lockError);
   const infoId = useExperience((s) => s.info);
   const infoOpenId = useExperience((s) => s.infoOpen);
-  const seen = OBJETOS_NATALINI.find((o) => o.id === infoId);
+  const aimId = useExperience((s) => s.aim);
+  const seen = OBJETOS_NATALINI.find((o) => o.id === (aimId ?? infoId));
   const open = OBJETOS_NATALINI.find((o) => o.id === infoOpenId);
   const navigate = useCurtainNavigate();
   const info = ZONAS_NATALINI[zona];
@@ -119,7 +120,7 @@ export function Hud({ desarrollo }: { desarrollo: Desarrollo }) {
             )}
             {seen && seen !== open && (
               <div className={styles.prompt}>
-                <kbd>I</kbd> {seen.nombre} · más información
+                <kbd>Clic</kbd> / <kbd>I</kbd> {seen.nombre} · más información
               </div>
             )}
           </div>
@@ -133,7 +134,7 @@ export function Hud({ desarrollo }: { desarrollo: Desarrollo }) {
                   {open.datos.map((d) => <li key={d}>{d}</li>)}
                 </ul>
               )}
-              <span className={styles.infoClose}><kbd>I</kbd> cerrar</span>
+              <span className={styles.infoClose}><kbd>Clic</kbd> / <kbd>I</kbd> cerrar</span>
             </aside>
           )}
           {riding && <div className={styles.riding}>En el ascensor…</div>}
