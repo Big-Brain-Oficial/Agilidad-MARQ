@@ -736,6 +736,16 @@ for name, x1, x2, z1 in [('Hall fondo ascensor', -2.86, -VANO, 0), ('Hall fondo 
 # quedaba una muesca hacia el hueco.
 obj = box('Losa podio cierre ascensor', (0, 8.435, CIELO_HALL+.14), (2.6, .27, .28), 'concrete', 0, '02_PODIO', False, True)
 metric_uv(obj, M['concrete']['tile_m'], world=True)
+# La pared del sillón chico y el techo del hall eran de hormigón: pasan a la piedra clara de las
+# otras dos paredes. El techo es un cielorraso de 2 cm bajo la losa, que se mete en los muros
+# para no dejar cantos coplanares; afuera del vidrio la losa sigue siendo de hormigón.
+hall_izq = bpy.data.objects['Hall fondo izq']
+hall_izq.data.materials.clear()
+hall_izq.data.materials.append(M['stone'])
+hall_izq['archviz_collide'] = True  # que el retexturizado de abajo no lo vuelva a hormigón
+metric_uv(hall_izq, M['stone']['tile_m'], world=True)
+obj = box('Cielorraso hall', ((-2.88+3.15)/2, (.10+8.43)/2, CIELO_HALL-.01), (3.15+2.88, 8.43-.10, .02), 'stone', 0, '04_HALL', False, True)
+metric_uv(obj, M['stone']['tile_m'], world=True)
 
 # Retexturizar también las superficies conservadas del hall/exterior.
 replace={'Hormigon':'concrete','Revoque':'plaster','Madera':'oak','Roble':'oak','Piedra':'stone','Marmol':'stone','Metal':'metal','Aluminio':'aluminum','Oliva':'olive','Lino':'linen','Blanco':'white'}
