@@ -23,7 +23,7 @@ function Controls() {
         <span><kbd>E</kbd></span> Usar ascensor · subir al bus
       </li>
       <li>
-        <span><kbd>I</kbd></span> Información de los objetos con el símbolo «i» (o clic sobre él)
+        <span><kbd>Clic</kbd><kbd>I</kbd></span> Información de los objetos con el símbolo «i»
       </li>
       <li>
         <span><kbd>Esc</kbd></span> Pausa
@@ -120,7 +120,7 @@ export function Hud({ desarrollo }: { desarrollo: Desarrollo }) {
             )}
             {seen && seen !== open && (
               <div className={styles.prompt}>
-                <kbd>{aimId ? 'Clic' : 'I'}</kbd> {seen.nombre} · más información
+                <kbd>Clic</kbd> / <kbd>I</kbd> {seen.nombre} · más información
               </div>
             )}
           </div>
@@ -134,7 +134,7 @@ export function Hud({ desarrollo }: { desarrollo: Desarrollo }) {
                   {open.datos.map((d) => <li key={d}>{d}</li>)}
                 </ul>
               )}
-              <span className={styles.infoClose}><kbd>I</kbd> o clic · cerrar</span>
+              <span className={styles.infoClose}><kbd>Clic</kbd> / <kbd>I</kbd> cerrar</span>
             </aside>
           )}
           {riding && <div className={styles.riding}>En el ascensor…</div>}

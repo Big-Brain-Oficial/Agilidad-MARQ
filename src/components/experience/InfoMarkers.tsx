@@ -10,8 +10,8 @@ import { useExperience } from './store';
 import styles from './Experience.module.css';
 
 // Símbolo «i» flotando sobre los objetos con información. Se ve de lejos si no hay una pared en el
-// medio; al acercarse se resalta y la tecla I abre la tarjeta del objeto (Hud). También se abre
-// con un clic al apuntarle con la mira: con el puntero capturado no hay cursor para tocar el DOM.
+// medio; al acercarse se resalta y la tecla I o un clic abren la tarjeta del objeto (Hud). Apuntándole
+// con la mira, el clic la abre desde más lejos: con el puntero capturado no hay cursor para tocar el DOM.
 
 const SHOW = 12; // distancia desde la que se ve el símbolo
 const NEAR = 2.5; // distancia horizontal a la que la tecla I abre la tarjeta
