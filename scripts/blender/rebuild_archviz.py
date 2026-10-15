@@ -319,11 +319,14 @@ door('Baño', (4.08, 6.11), (4.86, 6.11))
 wall('Baño sur jamba', (3.96, 6.11), (4.08, 6.11))
 wall('Entrada tramo izquierdo', (5.28, 7.51), (5.48, 7.51))
 door('Entrada', (5.48, 7.51), (6.38, 7.51))
+# La hoja se anima en la web; el ancla comparte las medidas del vano y sus jambas.
+S['ARCHVIZ_DOOR'] = json.dumps({'position': list(OFFSET + Vector((5.50, 7.51, .015))),
+                               'width': .86, 'height': A['doorHeight'] - .035})
 wall('Entrada tramo derecho', (6.38, 7.51), (6.89, 7.51))
 wall('Entrada lateral', (6.89, 6.66), (6.89, 7.57))
 wall('Toilette norte', (6.89, 6.66), (8.34, 6.66))
 wall('Toilette este', (8.31, 5.2), (8.31, 6.66))
-wall('Toilette sur', (6.89, 5.14), (8.34, 5.14))
+wall('Toilette sur', (6.89, 5.14), (8.64, 5.14))
 wall('Toilette jamba', (6.89, 5.14), (6.89, 5.42))
 door('Toilette', (6.89, 5.42), (6.89, 6.20))
 wall('Toilette tramo', (6.89, 6.20), (6.89, 6.66))
@@ -416,8 +419,7 @@ def import_asset(asset, loc, width=None, angle=0, col='08_DEPTO_MOBILIARIO', loc
     return objects
 
 
-import_asset('modern_arm_chair_01', (4.0, .66, 0), .70, .38)
-proxy('butaca', (4.0, .66, .40), (.72, .82, .80))
+# El paso entre estar, comedor y ventanal queda libre de la butaca y su colisionador.
 for asset in ['potted_plant_02', 'anthurium_botany_01']:
     if not (ASSETS/asset/'gltf.gltf').exists():
         raise FileNotFoundError('Ejecutar npm run archviz:assets para descargar ' + asset)
@@ -567,6 +569,24 @@ def vase(x,y,z,r=.075,height=.21,ma='terracotta'):
 vase(5.42,1.80,.777,.09,.29)
 vase(3.18,1.61,.401,.06,.15,'black')
 vase(8.19,.29,.91,.064,.18,'ceramic')
+# Ambientación sobre superficies existentes: sin obstáculos ni luces adicionales.
+for x, accent in [(2.38, 'terracotta'), (3.20, 'olive')]:
+    box('Cuadro marco roble', (x,3.387,1.81), (.62,.046,.78), 'oak', .006)
+    box('Cuadro fondo lino', (x,3.359,1.81), (.55,.012,.71), 'ivory', .002)
+    box('Cuadro relieve color', (x-.08,3.348,1.77), (.22,.008,.39), accent, .003)
+    box('Cuadro relieve claro', (x+.13,3.342,1.90), (.14,.008,.28), 'linen', .003)
+cylinder('Lampara mesa base', (1.76,2.33,.55), .09,.035,'ceramic')
+cylinder('Lampara mesa pie', (1.76,2.33,.70), .018,.28,'brass')
+cylinder('Lampara mesa pantalla', (1.76,2.33,.88), .155,.22,'ivory',.10)
+# Ramas en el jarrón del comedor: geometría liviana y materiales ya cargados.
+for dx,dy,h in [(-.11,.02,.57),(.09,.06,.64),(.03,-.10,.52)]:
+    curve('Rama jarron', [(5.42,1.80,.99),(5.42+dx*.5,1.80+dy*.5,1.13),(5.42+dx,1.80+dy,.777+h)], .003, 'oak')
+    for t in [.65,.85]:
+        leaf=box('Hoja decorativa', (5.42+dx*t+.025,1.80+dy*t,1.02+(h-.24)*t), (.075,.026,.006), 'olive', .002)
+        leaf.rotation_euler.y=-.45
+box('Tabla cocina apoyada', (8.50,2.46,1.08), (.028,.25,.34), 'oak', .012)
+cylinder('Taza ceramica', (8.18,2.43,.96), .038,.09,'terracotta')
+curve('Asa taza', [(8.21,2.43,.99),(8.25,2.43,.99),(8.25,2.43,.94),(8.21,2.43,.94)], .007, 'terracotta')
 for i,ma in enumerate(['olive','ivory']):
     ob=box('Libro mesa', (2.78,1.62,.409+i*.024), (.24,.18,.023), ma, .002)
     ob.rotation_euler.z=.10+i*.11

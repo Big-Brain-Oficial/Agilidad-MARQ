@@ -4,6 +4,7 @@ import type { ZonaId } from '@/content/recorridos';
 import { buildCabinDoors, type CabinDoors } from './cabinDoors';
 import { buildCollider, wallGeometry } from './collision';
 import { buildEntranceDoor, removeOpenLeaves, type EntranceDoor } from './entranceDoor';
+import { buildApartmentDoor, type ApartmentDoor } from './apartmentDoor';
 
 // Convierte el GLB exportado por scripts/blender/export_web.py en los datos que usa la experiencia.
 // Convenciones de nombres del GLB:
@@ -38,6 +39,7 @@ export interface WorldData {
   cabin: THREE.Group;
   doors: CabinDoors;
   entrance: EntranceDoor | null;
+  apartmentDoor: ApartmentDoor;
   /**
    * Paradas del ascensor (0 = hall). Cada una tiene su hueco: `cabin` es la posición del grupo de la
    * cabina en esa parada (el modelo la trae en la 0).
@@ -137,6 +139,9 @@ export function prepareWorld(scene: THREE.Object3D): WorldData {
   }
 
   const bus = worldPos(named('ANCLA__bus'));
+  const panel = [...materials.values()].find((m) => m.name === 'AV_Laca_satinada');
+  if (!panel) throw new Error('El modelo no tiene el material de la puerta del departamento');
+  const apartmentDoor = buildApartmentDoor(scene, named('ANCLA__puerta_depto'), panel, Array.isArray(steel) ? steel[0] : steel);
   const busDoor = bus.clone().add(BUS_DOOR);
 
   // Paredes invisibles en el borde de lo transitable (calle, vereda y terreno del edificio).
@@ -199,6 +204,7 @@ export function prepareWorld(scene: THREE.Object3D): WorldData {
     cabin,
     doors,
     entrance,
+    apartmentDoor,
     stops,
     transfer: elevatorData.transbordo ?? Infinity,
     pisoDepto: elevatorData.piso_depto ?? 0,

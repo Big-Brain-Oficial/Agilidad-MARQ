@@ -1,0 +1,56 @@
+// Colisiones de la hoja girada y cierre con el visitante en el vano, sin cargar el GLB.
+import assert from 'node:assert/strict';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { pathToFileURL } from 'node:url';
+import { resolve } from 'node:path';
+import ts from 'typescript';
+import * as THREE from 'three';
+
+const dir = '.cache/door-physics';
+await mkdir(dir, { recursive: true });
+for (const name of ['collision', 'apartmentDoor']) {
+  const source = await readFile(`src/components/experience/${name}.ts`, 'utf8');
+  const { outputText } = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext } });
+  await writeFile(`${dir}/${name}.mjs`, outputText.replace("'./collision'", "'./collision.mjs'"));
+}
+const { buildApartmentDoor } = await import(pathToFileURL(resolve(dir, 'apartmentDoor.mjs')).href);
+const scene = new THREE.Scene();
+const anchor = new THREE.Object3D();
+anchor.position.set(-2, 29.915, -7.51);
+anchor.userData = { width: .86, height: 2.145 };
+scene.add(anchor);
+const material = new THREE.MeshStandardMaterial();
+const door = buildApartmentDoor(scene, anchor, material, material);
+const leaf = scene.getObjectByName('puerta_departamento');
+const eye = new THREE.Vector3(-1.57, 31.55, -8.25);
+const delta = new THREE.Vector3();
+const collision = (x, z) => door.resolve(new THREE.Vector3(x, 31.42, z), new THREE.Vector3(x, 30.13, z), .23, delta).clone();
+const animate = () => { for (let i = 0; i < 120; i++) door.update(eye, 1 / 60, .23); };
+assert.ok(collision(-1.57, -7.65).z < -.1, 'Cerrada: bloquea desde el pasillo');
+assert.ok(collision(-1.57, -7.37).z > .1, 'Cerrada: bloquea desde adentro');
+door.toggle();
+animate();
+assert.equal(leaf.rotation.y, -Math.PI / 2);
+assert.ok(collision(-1.57, -7.51).length() < 1e-6, 'Abierta: el vano queda libre');
+assert.ok(collision(-1.9, -7.08).x > .1, 'La colisión gira junto con la hoja');
+eye.set(-1.57, 31.55, -7.51);
+door.toggle();
+animate();
+assert.ok(leaf.rotation.y < -.2, 'El cierre espera si el visitante ocupa el vano');
+assert.ok(collision(eye.x, eye.z).length() < 1e-6, 'No alcanza ni empuja al visitante');
+eye.z = -8.25;
+animate();
+assert.equal(leaf.rotation.y, 0, 'Completa el cierre cuando se despeja el vano');
+eye.set(-1.57, 31.55, -7.7625);
+door.toggle();
+for (let i = 0; i < 240; i++) door.update(eye, 1 / 240, .23);
+assert.equal(leaf.rotation.y, -Math.PI / 2, 'Puede alejarse de alguien apoyado contra la hoja, incluso a FPS altos');
+eye.z = -8.25;
+door.toggle();
+animate();
+door.toggle();
+eye.set(-1.57, 31.55, -7.08);
+animate();
+assert.ok(leaf.rotation.y > -Math.PI / 2, 'La apertura también espera si alguien ocupa el barrido');
+assert.ok(collision(eye.x, eye.z).length() < 1e-6);
+console.log('APARTMENT_DOOR_PHYSICS_OK');

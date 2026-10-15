@@ -58,7 +58,18 @@ for bed, room_id, wall_name in zip(beds, ['bedroom1', 'bedroom2'], ['Norte dormi
     assert bed_max[1] + .10 <= wall_min[1] + EPS, room_id
     clearances.append({'room': room_id, 'footClearance': round(clearance, 3), 'width': round(bed.dimensions.x, 3), 'length': round(bed.dimensions.y, 3)})
 
-report = {'floorPieces': len(floors), 'outlets': outlets, 'beds': clearances}
+# El tabique del toilette llega hasta la cara interior de la pared de cocina.
+south_min, south_max = bounds(bpy.data.objects['Toilette sur'])
+kitchen_min, kitchen_max = bounds(bpy.data.objects['Cocina este'])
+assert south_max[0] >= kitchen_min[0]
+assert min(south_max[1], kitchen_max[1]) > max(south_min[1], kitchen_min[1])
+assert abs(south_max[2] - kitchen_max[2]) < EPS
+assert not any(o.name.startswith('Proxy butaca') or o.get('source') == 'https://polyhaven.com/a/modern_arm_chair_01' for o in bpy.data.objects)
+door = json.loads(bpy.context.scene['ARCHVIZ_DOOR'])
+assert .84 <= door['width'] <= .88
+assert door['height'] > 2.1
+
+report = {'floorPieces': len(floors), 'outlets': outlets, 'beds': clearances, 'kitchenWallJoined': True, 'door': door}
 out = ROOT / '.cache/models/apartment-verification.json'
 out.parent.mkdir(parents=True, exist_ok=True)
 out.write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
