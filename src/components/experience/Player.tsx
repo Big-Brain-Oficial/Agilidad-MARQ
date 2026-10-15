@@ -9,12 +9,13 @@ import type { ZonaId } from '@/content/recorridos';
 import { CABIN_FLOOR } from './cabinDoors';
 import { resolveCapsule } from './collision';
 import { useExperience } from './store';
+import { touchInput } from './touchInput';
 import type { WorldData } from './prepareWorld';
 
 // Control en primera persona: mouse para mirar (pointer lock), WASD/flechas para caminar,
 // Shift para correr, E (o clic) para interactuar e I (o clic) para ver la información del objeto
-// cercano (InfoMarkers). La cámara está a la altura de los ojos y
-// el cuerpo es una cápsula que colisiona contra el BVH del modelo.
+// cercano (InfoMarkers). En iPhone/iPad, joystick y arrastre para mirar (TouchControls). La cámara
+// está a la altura de los ojos y el cuerpo es una cápsula que colisiona contra el BVH del modelo.
 
 const EYE = 1.65;
 const RADIUS = 0.23;
@@ -26,6 +27,8 @@ const GRAVITY = -24;
 const SUBSTEPS = 5;
 const RIDE_SECONDS = 4.5;
 const DOOR_SECONDS = 1.1;
+const LOOK_SPEED = 0.0045; // radianes por píxel de arrastre en táctil
+const MAX_PITCH = Math.PI / 2 - 0.05;
 
 const KEYS = {
   forward: ['KeyW', 'ArrowUp'],
@@ -45,6 +48,7 @@ const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 
 export function Player({ world, debug }: { world: WorldData; debug: boolean }) {
   const camera = useThree((s) => s.camera);
   const gl = useThree((s) => s.gl);
+  const touch = useExperience((s) => s.touch);
   const pressed = useRef(new Set<string>());
   const current = useRef<Interactable | null>(null);
   const s = useRef({
@@ -76,6 +80,7 @@ export function Player({ world, debug }: { world: WorldData; debug: boolean }) {
       st.vel.set(0, 0, 0);
       st.bob = 0;
       pressed.current.clear();
+      touchInput.reset();
       st.level = view.position.y > 10 ? world.stops.length - 1 : 0;
       world.cabin.position.copy(world.stops[st.level].cabin);
       camera.position.copy(st.pos);
@@ -116,9 +121,22 @@ export function Player({ world, debug }: { world: WorldData; debug: boolean }) {
     };
   }, []);
 
+  // Botón de acción del HUD táctil: lo mismo que la tecla E.
+  useEffect(() => {
+    useExperience.getState().setInteract(() => {
+      if (useExperience.getState().phase === 'playing') current.current?.action();
+    });
+  }, []);
+
   // El HUD bloquea el puntero con esta función (necesita un gesto del usuario).
   useEffect(() => {
     useExperience.getState().setLock(() => {
+      // En táctil no hay puntero que capturar: se empieza a jugar directamente.
+      if (touch) {
+        touchInput.reset();
+        useExperience.getState().setPhase('playing');
+        return;
+      }
       // Se pide directamente para poder capturar el rechazo (p. ej. si se re-bloquea enseguida
       // después de salir con Esc). PointerLockControls detecta el bloqueo y dispara onLock.
       const markError = () => useExperience.getState().setLockError(true);
@@ -130,7 +148,7 @@ export function Player({ world, debug }: { world: WorldData; debug: boolean }) {
       }
       if (debug) useExperience.getState().setPhase('playing');
     });
-  }, [debug, gl]);
+  }, [debug, gl, touch]);
 
   // API de depuración (?debug): para pruebas automatizadas sin mouse.
   useEffect(() => {
@@ -161,6 +179,7 @@ export function Player({ world, debug }: { world: WorldData; debug: boolean }) {
   const delta = useRef(new THREE.Vector3()).current;
   const movingDelta = useRef(new THREE.Vector3()).current;
   const up = useRef(new THREE.Vector3(0, 1, 0)).current;
+  const euler = useRef(new THREE.Euler(0, 0, 0, 'YXZ')).current;
 
   const moved = useRef(new THREE.Vector3()).current;
 
@@ -175,6 +194,18 @@ export function Player({ world, debug }: { world: WorldData; debug: boolean }) {
     const canMove = ui.phase === 'playing' && !st.ride;
     const keys = pressed.current;
     const has = (list: string[]) => list.some((k) => keys.has(k));
+    const running = has(KEYS.run) || (touch && touchInput.run);
+
+    // Mirada táctil: el arrastre gira la cámara como el mouse con PointerLockControls.
+    if (touch) {
+      if (ui.phase === 'playing' && (touchInput.lookX || touchInput.lookY)) {
+        euler.setFromQuaternion(camera.quaternion);
+        euler.y -= touchInput.lookX * LOOK_SPEED;
+        euler.x = THREE.MathUtils.clamp(euler.x - touchInput.lookY * LOOK_SPEED, -MAX_PITCH, MAX_PITCH);
+        camera.quaternion.setFromEuler(euler);
+      }
+      touchInput.lookX = touchInput.lookY = 0;
+    }
 
     if (st.ride) {
       // Viaje en ascensor: cierran las puertas, la cabina y el visitante se mueven juntos y
@@ -215,7 +246,14 @@ export function Player({ world, debug }: { world: WorldData; debug: boolean }) {
         if (has(KEYS.left)) move.sub(right);
       }
       const moving = move.lengthSq() > 0;
-      if (moving) move.normalize().multiplyScalar(has(KEYS.run) ? RUN : WALK);
+      if (moving) move.normalize().multiplyScalar(running ? RUN : WALK);
+      else if (canMove && touch) {
+        // El joystick regula la velocidad: inclinarlo poco es caminar despacio.
+        move.addScaledVector(forward, touchInput.moveY).addScaledVector(right, touchInput.moveX);
+        const amount = Math.min(1, move.length());
+        if (amount > 0.05) move.normalize().multiplyScalar(running ? RUN : WALK * amount);
+        else move.set(0, 0, 0);
+      }
 
       st.prev.copy(st.pos);
       world.entrance?.update(st.pos, dt);
@@ -279,7 +317,7 @@ export function Player({ world, debug }: { world: WorldData; debug: boolean }) {
       }
 
       // Balanceo suave de la cámara al caminar.
-      st.bob = moving && st.onGround ? st.bob + dt * (has(KEYS.run) ? 16 : 10) : 0;
+      st.bob = move.lengthSq() > 0 && st.onGround ? st.bob + dt * (running ? 16 : 10) : 0;
     }
 
     camera.position.copy(st.pos);
@@ -312,6 +350,9 @@ export function Player({ world, debug }: { world: WorldData; debug: boolean }) {
       if (zona !== ui.zona) ui.setZona(zona);
     }
   });
+
+  // En iOS no hay pointer lock (el iPhone no lo implementa): la mirada la da el arrastre.
+  if (touch) return null;
 
   // domElement explícito: por defecto drei usa el contenedor de eventos de R3F (el div que
   // envuelve al canvas), pero el bloqueo se pide sobre el canvas y no detectaría el cambio.

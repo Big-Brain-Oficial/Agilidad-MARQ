@@ -5,9 +5,32 @@ import type { Desarrollo } from '@/content/desarrollos';
 import { AVISO_MODELO, OBJETOS_NATALINI, ZONAS_NATALINI } from '@/content/recorridos';
 import { useCurtainNavigate } from '@/components/transition/curtain-store';
 import { useExperience } from './store';
+import { TouchControls } from './TouchControls';
 import styles from './Experience.module.css';
 
 function Controls() {
+  const touch = useExperience((s) => s.touch);
+  if (touch) {
+    return (
+      <ul className={styles.controls}>
+        <li>
+          <span><kbd>Izquierda</kbd></span> Arrastrá para caminar (estirá más para correr)
+        </li>
+        <li>
+          <span><kbd>Derecha</kbd></span> Arrastrá para mirar alrededor
+        </li>
+        <li>
+          <span><kbd>Botón</kbd></span> Usar ascensor · subir al bus
+        </li>
+        <li>
+          <span><kbd>Tocá</kbd></span> Información de los objetos con el símbolo «i»
+        </li>
+        <li>
+          <span><kbd>❚❚</kbd></span> Pausa
+        </li>
+      </ul>
+    );
+  }
   return (
     <ul className={styles.controls}>
       <li>
@@ -79,6 +102,7 @@ export function Hud({ desarrollo }: { desarrollo: Desarrollo }) {
   const infoId = useExperience((s) => s.info);
   const infoOpenId = useExperience((s) => s.infoOpen);
   const aimId = useExperience((s) => s.aim);
+  const touch = useExperience((s) => s.touch);
   const seen = OBJETOS_NATALINI.find((o) => o.id === (aimId ?? infoId));
   const open = OBJETOS_NATALINI.find((o) => o.id === infoOpenId);
   const navigate = useCurtainNavigate();
@@ -113,25 +137,40 @@ export function Hud({ desarrollo }: { desarrollo: Desarrollo }) {
 
       {phase === 'playing' && (
         <>
+          {touch && <TouchControls />}
           <div className={styles.crosshair} aria-hidden="true" />
           <aside className={styles.zone} data-visible={showZone || undefined} aria-live="polite">
             <strong>{info.titulo}</strong>
             <span>{info.texto}</span>
           </aside>
           <div className={styles.prompts} role="status">
-            {prompt && (
+            {/* En táctil los avisos son botones: no hay teclas E ni I. */}
+            {prompt && (touch ? (
+              <button type="button" className={styles.prompt} onClick={() => useExperience.getState().interact()}>
+                {prompt}
+              </button>
+            ) : (
               <div className={styles.prompt}>
                 <kbd>E</kbd> {prompt}
               </div>
-            )}
-            {seen && seen !== open && (
+            ))}
+            {seen && seen !== open && (touch ? (
+              <button type="button" className={styles.prompt} onClick={() => useExperience.getState().toggleInfo(seen.id)}>
+                <span className={styles.promptInfo} aria-hidden="true">i</span> {seen.nombre} · más información
+              </button>
+            ) : (
               <div className={styles.prompt}>
                 <kbd>Clic</kbd> / <kbd>I</kbd> {seen.nombre} · más información
               </div>
-            )}
+            ))}
           </div>
           {open && (
-            <aside className={styles.info} aria-live="polite" aria-labelledby="info-title">
+            <aside
+              className={styles.info}
+              aria-live="polite"
+              aria-labelledby="info-title"
+              onClick={touch ? () => useExperience.getState().closeInfo() : undefined}
+            >
               <span className={styles.infoKicker}>{open.nombre}</span>
               <strong id="info-title">{open.titulo}</strong>
               <p>{open.texto}</p>
@@ -140,13 +179,17 @@ export function Hud({ desarrollo }: { desarrollo: Desarrollo }) {
                   {open.datos.map((d) => <li key={d}>{d}</li>)}
                 </ul>
               )}
-              <span className={styles.infoClose}><kbd>Clic</kbd> / <kbd>I</kbd> cerrar</span>
+              <span className={styles.infoClose}>
+                {touch ? 'Tocá para cerrar' : <><kbd>Clic</kbd> / <kbd>I</kbd> cerrar</>}
+              </span>
             </aside>
           )}
           {riding && <div className={styles.riding}>En el ascensor…</div>}
-          <p className={styles.help}>
-            <kbd>Esc</kbd> pausa · el <strong>MARQ Bus</strong> te lleva de vuelta al mapa
-          </p>
+          {!touch && (
+            <p className={styles.help}>
+              <kbd>Esc</kbd> pausa · el <strong>MARQ Bus</strong> te lleva de vuelta al mapa
+            </p>
+          )}
         </>
       )}
 
