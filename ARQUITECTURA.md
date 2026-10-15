@@ -121,6 +121,10 @@ Si alguien entra directo por URL, la cortina se cierra al instante y funciona co
 - **Zonas**: la posición se compara con las cajas `ZONA__*` para mostrar dónde está el visitante (vereda, hall, ascensor, pasillo, departamento) y un texto breve.
 - **Información de objetos**: cada objeto con información (`OBJETOS_NATALINI` en `recorridos.ts`) tiene un punto en coordenadas de la escena donde flota un símbolo «i» (`InfoMarkers.tsx`, con `Html` de drei). No depende del GLB, porque las mallas vienen unidas por material. El símbolo se ve a menos de 12 m si un rayo contra el BVH no encuentra una pared en el medio. A menos de 2,5 m se resalta, aparece el aviso «I» y la tecla I abre una tarjeta que no pausa. Se cierra con I de nuevo o al alejarse más de 4,5 m.
 
+### Preparación de la cabina
+
+La copia del GLB y `prepareWorld` se ejecutan en el mismo cálculo de `World.tsx`. React puede repetir los cálculos de montaje en desarrollo: preparar dos veces la misma copia dejaba el piso y las paredes en una cabina anterior, mientras la cámara y las puertas viajaban en otra. Cada cálculo prepara ahora una escena nueva y conserva juntos modelo y datos de navegación.
+
 ## 6. MARQ Bus
 
 Modelado en código (`MarqBus.tsx`) con la identidad de MARQ: cuerpo blanco, franja roja, rótulo "MARQ Bus" y cartel "MAPA MARQ". Está estacionado junto al cordón, donde marca `ANCLA__bus`, y tiene su propio volumen de colisión. Al acercarse a la puerta, su marco se ilumina y aparece **E · Subir al MARQ Bus · volver al mapa**.
