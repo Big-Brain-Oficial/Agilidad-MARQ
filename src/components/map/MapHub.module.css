@@ -536,9 +536,21 @@
   padding: 26px 28px 22px;
   border-bottom: 1px solid var(--line);
 }
-.brandMark {
-  font: 800 26px/1 var(--font-display);
-  letter-spacing: 0.18em;
+
+/* Aclaración obligatoria: es una muestra académica, no el sitio oficial de MARQ. */
+.disclaimer {
+  margin-top: auto;
+  padding: 14px 28px;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+.brandLogo {
+  /* Wordmark «marq Experience» (public/brand/marq-experience.svg). Hereda el color de la tinta. */
+  height: 42px;
+  width: auto;
+  color: var(--ink);
 }
 .brandSub {
   display: grid;
@@ -819,6 +831,9 @@
   }
   .brand {
     padding: 18px 20px;
+  }
+  .disclaimer {
+    padding: 12px 20px;
   }
   .overviewBar {
     padding: 14px 20px 0;
