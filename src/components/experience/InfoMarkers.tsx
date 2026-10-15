@@ -10,27 +10,34 @@ import { useExperience } from './store';
 import styles from './Experience.module.css';
 
 // Símbolo «i» flotando sobre los objetos con información. Se ve de lejos si no hay una pared en el
-// medio; al acercarse se resalta y la tecla I abre la tarjeta del objeto (Hud).
+// medio; al acercarse se resalta y la tecla I abre la tarjeta del objeto (Hud). También se abre
+// con un clic al apuntarle con la mira: con el puntero capturado no hay cursor para tocar el DOM.
 
 const SHOW = 12; // distancia desde la que se ve el símbolo
 const NEAR = 2.5; // distancia horizontal a la que la tecla I abre la tarjeta
 const CLOSE = 4.5; // más lejos, la tarjeta abierta se cierra sola
+const AIM_DISTANCE = 4; // hasta dónde se puede clickear (menos que CLOSE, para que no se cierre enseguida)
+const AIM_ANGLE = 0.12; // radianes entre la mira y el símbolo (~7°)
 
 const OBJETOS = OBJETOS_NATALINI.map((o) => ({ id: o.id, position: new THREE.Vector3(...o.marcador) }));
 
-type State = 'oculto' | 'lejos' | 'cerca';
+type State = 'oculto' | 'lejos' | 'cerca' | 'apuntado';
 
 export function InfoMarkers({ world }: { world: WorldData }) {
   const camera = useThree((s) => s.camera);
   const markers = useRef<(HTMLDivElement | null)[]>([]);
   const states = useRef<State[]>([]);
   const ray = useRef(new THREE.Ray()).current;
+  const forward = useRef(new THREE.Vector3()).current;
 
   useFrame(() => {
     const ui = useExperience.getState();
     const active = ui.phase === 'playing' && !ui.riding;
     let seen: string | null = null;
     let best = NEAR;
+    let aim: string | null = null;
+    let bestAngle = AIM_ANGLE;
+    camera.getWorldDirection(forward);
     OBJETOS.forEach((o, i) => {
       const distance = camera.position.distanceTo(o.position);
       let visible = active && distance < SHOW;
@@ -46,8 +53,17 @@ export function InfoMarkers({ world }: { world: WorldData }) {
         seen = o.id;
         best = flat;
       }
+      let aimed = false;
+      if (visible && distance < AIM_DISTANCE) {
+        const angle = forward.angleTo(ray.direction);
+        aimed = angle < bestAngle;
+        if (aimed) {
+          aim = o.id;
+          bestAngle = angle;
+        }
+      }
       // Se escribe en el DOM solo al cambiar: no hace falta volver a dibujar React en cada cuadro.
-      const state: State = !visible ? 'oculto' : flat < NEAR ? 'cerca' : 'lejos';
+      const state: State = !visible ? 'oculto' : aimed ? 'apuntado' : flat < NEAR ? 'cerca' : 'lejos';
       const el = markers.current[i];
       if (el && states.current[i] !== state) {
         states.current[i] = state;
@@ -55,6 +71,7 @@ export function InfoMarkers({ world }: { world: WorldData }) {
       }
     });
     ui.setInfo(seen);
+    ui.setAim(aim);
     const open = OBJETOS.find((o) => o.id === ui.infoOpen);
     if (open && (ui.riding || camera.position.distanceTo(open.position) > CLOSE)) ui.closeInfo();
   });

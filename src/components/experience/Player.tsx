@@ -12,8 +12,8 @@ import { useExperience } from './store';
 import type { WorldData } from './prepareWorld';
 
 // Control en primera persona: mouse para mirar (pointer lock), WASD/flechas para caminar,
-// Shift para correr, E (o clic) para interactuar e I para ver la información del objeto cercano
-// (InfoMarkers). La cámara está a la altura de los ojos y
+// Shift para correr, E (o clic) para interactuar e I (o clic sobre el símbolo «i») para ver la
+// información del objeto cercano (InfoMarkers). La cámara está a la altura de los ojos y
 // el cuerpo es una cápsula que colisiona contra el BVH del modelo.
 
 const EYE = 1.65;
@@ -96,7 +96,12 @@ export function Player({ world, debug }: { world: WorldData; debug: boolean }) {
     const up = (e: KeyboardEvent) => pressed.current.delete(e.code);
     const clear = () => pressed.current.clear();
     const click = () => {
-      if (useExperience.getState().phase === 'playing' && document.pointerLockElement) current.current?.action();
+      const ui = useExperience.getState();
+      if (ui.phase !== 'playing' || !document.pointerLockElement) return;
+      // El símbolo «i» bajo la mira tiene prioridad sobre la acción de la tecla E.
+      if (ui.aim) ui.toggleInfo(ui.aim);
+      else if (current.current) current.current.action();
+      else ui.closeInfo();
     };
     window.addEventListener('keydown', down);
     window.addEventListener('keyup', up);
