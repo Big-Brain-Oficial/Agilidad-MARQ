@@ -21,8 +21,14 @@ interface ExperienceState {
   aim: string | null;
   /** El navegador rechazó capturar el mouse (se puede reintentar con otro clic). */
   lockError: boolean;
-  /** Bloquea el puntero (lo registra el control de primera persona). */
+  /** Bloquea el puntero (lo registra el control de primera persona). En táctil sólo empieza a jugar. */
   lock: () => void;
+  /** Controles táctiles (iPhone/iPad) en lugar de mouse y teclado. */
+  touch: boolean;
+  setTouch: (touch: boolean) => void;
+  /** Ejecuta la acción disponible, como la tecla E (lo registra el visitante). */
+  interact: () => void;
+  setInteract: (interact: () => void) => void;
   quality: 'alta' | 'fluida';
   softwareRenderer: boolean;
   setSoftwareRenderer: (softwareRenderer: boolean) => void;
@@ -57,6 +63,11 @@ export const useExperience = create<ExperienceState>((set, get) => ({
   aim: null,
   lockError: false,
   lock: () => {},
+  // Táctil arranca en «Fluida»: sin SSAO ni sombras, que en el teléfono cuestan batería y memoria.
+  touch: false,
+  setTouch: (touch) => set(touch ? { touch, quality: 'fluida' } : { touch }),
+  interact: () => {},
+  setInteract: (interact) => set({ interact }),
   quality: 'alta',
   softwareRenderer: false,
   setSoftwareRenderer: (softwareRenderer) => set(softwareRenderer ? { softwareRenderer, quality: 'fluida' } : { softwareRenderer }),
@@ -89,5 +100,5 @@ export const useExperience = create<ExperienceState>((set, get) => ({
     set({ phase: 'leaving', prompt: null, info: null, infoOpen: null, aim: null });
     if (typeof document !== 'undefined' && document.pointerLockElement) document.exitPointerLock();
   },
-  reset: () => set({ phase: 'loading', zona: 'exterior', prompt: null, riding: false, info: null, infoOpen: null, aim: null, lockError: false, views: [], visit: () => {}, lock: () => {} }),
+  reset: () => set({ phase: 'loading', zona: 'exterior', prompt: null, riding: false, info: null, infoOpen: null, aim: null, lockError: false, views: [], visit: () => {}, lock: () => {}, interact: () => {} }),
 }));

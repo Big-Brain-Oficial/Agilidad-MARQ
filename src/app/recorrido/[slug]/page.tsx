@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { ExperienceGate } from '@/components/experience/ExperienceGate';
@@ -7,6 +7,15 @@ import { DESARROLLOS, desarrolloConRecorrido } from '@/content/desarrollos';
 // Una ruta por desarrollo con recorrido 3D (hoy: /recorrido/torre-natalini).
 
 export const dynamicParams = false;
+
+// En el iPhone el recorrido ocupa toda la pantalla (los controles respetan la muesca con
+// env(safe-area-inset-*)) y no se agranda con un doble toque mientras se camina.
+export const viewport: Viewport = {
+  themeColor: '#F2F1ED',
+  viewportFit: 'cover',
+  maximumScale: 1,
+  userScalable: false,
+};
 
 export function generateStaticParams() {
   return DESARROLLOS.filter((d) => d.recorrido3d).map((d) => ({ slug: d.recorrido3d!.slug }));
