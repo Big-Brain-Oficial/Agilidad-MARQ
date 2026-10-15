@@ -24,6 +24,8 @@ interface ExperienceState {
   /** Bloquea el puntero (lo registra el control de primera persona). */
   lock: () => void;
   quality: 'alta' | 'fluida';
+  softwareRenderer: boolean;
+  setSoftwareRenderer: (softwareRenderer: boolean) => void;
   atmosphere: 'dia' | 'tarde';
   views: { id: string; label: string }[];
   visit: (id: string) => void;
@@ -56,6 +58,8 @@ export const useExperience = create<ExperienceState>((set, get) => ({
   lockError: false,
   lock: () => {},
   quality: 'alta',
+  softwareRenderer: false,
+  setSoftwareRenderer: (softwareRenderer) => set(softwareRenderer ? { softwareRenderer, quality: 'fluida' } : { softwareRenderer }),
   atmosphere: 'dia',
   views: [],
   visit: () => {},
