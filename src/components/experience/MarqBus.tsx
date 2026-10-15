@@ -185,16 +185,6 @@ function makeGeometries() {
     frontLabel: new THREE.PlaneGeometry(1.0, 0.166),
     rearLabel: new THREE.PlaneGeometry(1.3, 0.216),
     sideLabel: new THREE.PlaneGeometry(2.8, 0.47),
-    // Espejos «orejas de conejo»: brazo que sale del techo hacia adelante y baja frente al parabrisas.
-    mirrorArm: new THREE.TubeGeometry(
-      new THREE.CatmullRomCurve3([
-        new THREE.Vector3(L / 2 - 0.28, 2.82, SIDE - 0.08),
-        new THREE.Vector3(L / 2 + 0.08, 2.96, SIDE + 0.04),
-        new THREE.Vector3(L / 2 + 0.3, 2.78, SIDE + 0.12),
-        new THREE.Vector3(L / 2 + 0.33, 2.5, SIDE + 0.13),
-      ]),
-      24, 0.022, 8
-    ),
   };
 }
 
@@ -345,14 +335,6 @@ export function MarqBus({ position }: { position: THREE.Vector3 }) {
         </group>
       </group>
       <RoundedBox args={[0.16, 0.3, W - 0.04]} radius={0.06} smoothness={3} position={[L / 2 - 0.02, 0.44, 0]} material={m.trim} castShadow />
-
-      {/* Espejos. */}
-      {[1, -1].map((s) => (
-        <group key={s} scale-z={s}>
-          <mesh geometry={g.mirrorArm} material={m.black} castShadow />
-          <RoundedBox args={[0.07, 0.42, 0.24]} radius={0.03} smoothness={2} position={[L / 2 + 0.33, 2.32, SIDE + 0.15]} material={m.black} castShadow />
-        </group>
-      ))}
 
       {/* Trasera: luneta, rejilla del motor, faros y paragolpes. */}
       <group position={[-L / 2, 0, 0]} rotation-y={-Math.PI / 2}>
