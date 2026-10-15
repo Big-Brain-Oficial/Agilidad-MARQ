@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import type { Desarrollo } from '@/content/desarrollos';
 import { AVISO_MODELO, OBJETOS_NATALINI, ZONAS_NATALINI } from '@/content/recorridos';
 import { useCurtainNavigate } from '@/components/transition/curtain-store';
+import { BrandLogo } from '@/components/brand/BrandLogo';
 import { useExperience } from './store';
 import { TouchControls } from './TouchControls';
 import styles from './Experience.module.css';
@@ -128,7 +129,7 @@ export function Hud({ desarrollo }: { desarrollo: Desarrollo }) {
   return (
     <>
       <header className={styles.brand}>
-        <span className={styles.brandMark}>MARQ</span>
+        <BrandLogo className={styles.brandLogo} />
         <span className={styles.brandSub}>
           <strong>{desarrollo.nombre}</strong>
           <span>{info.titulo}</span>

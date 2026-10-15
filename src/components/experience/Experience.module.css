@@ -56,9 +56,11 @@
   backdrop-filter: blur(8px);
   pointer-events: none;
 }
-.brandMark {
-  font: 800 20px/1 var(--font-display);
-  letter-spacing: 0.16em;
+.brandLogo {
+  /* Wordmark «marq Experience» (public/brand/marq-experience.svg). */
+  height: 32px;
+  width: auto;
+  color: var(--ink);
 }
 .brandSub {
   display: grid;
@@ -438,8 +440,8 @@
     max-width: calc(100% - 90px);
     padding: 8px 12px 8px 10px;
   }
-  .root[data-touch] .brandMark {
-    font-size: 16px;
+  .root[data-touch] .brandLogo {
+    height: 26px;
   }
   .root[data-touch] .pause {
     top: calc(12px + env(safe-area-inset-top));
