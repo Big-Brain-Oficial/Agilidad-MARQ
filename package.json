@@ -9,7 +9,10 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "model:build": "node scripts/build-model.mjs",
-    "archviz:assets": "node scripts/archviz-assets.mjs"
+    "archviz:assets": "node scripts/archviz-assets.mjs",
+    "unreal:prepare": "node scripts/unreal/prepare.mjs",
+    "unreal:import": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/unreal/Import-Natalini.ps1",
+    "unreal:stream": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/unreal/Start-Natalini.ps1"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",

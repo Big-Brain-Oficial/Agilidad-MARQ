@@ -13,6 +13,8 @@ Plataforma inmobiliaria inmersiva para MARQ. Un **mapa geográfico en perspectiv
 
 ## 1. Stack
 
+La rama experimental `codex/unreal-natalini` agrega un proyecto Unreal Engine 5.7 en `unreal/Natalini` y una comparación en `/evaluacion/natalini`. La ruta `/recorrido/torre-natalini/unreal` abre bajo demanda el reproductor externo de Pixel Streaming 2; no descarga Three.js ni ejecuta Unreal en Vercel. El edificio se prepara con `unreal:prepare` y se importa con `unreal:import`. Alcance, requisitos y pendientes en [docs/UNREAL-NATALINI.md](docs/UNREAL-NATALINI.md).
+
 | Capa | Tecnología | Motivo |
 |---|---|---|
 | Framework | Next.js 16 (App Router) + TypeScript | Rutas compartibles, *code splitting* por ruta, deploy nativo en Vercel |

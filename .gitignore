@@ -7,3 +7,15 @@ out
 *.tsbuildinfo
 *.blend1
 next-env.d.ts
+.env.local
+.env.*.local
+unreal/**/Binaries/
+unreal/**/DerivedDataCache/
+unreal/**/Intermediate/
+unreal/**/Saved/
+unreal/**/Content/
+!unreal/Natalini/Content/
+unreal/Natalini/Content/*
+!unreal/Natalini/Content/Python/
+unreal/**/.vs/
+unreal/**/*.sln
