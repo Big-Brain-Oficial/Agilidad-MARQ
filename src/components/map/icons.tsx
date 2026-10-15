@@ -44,6 +44,22 @@ export function OverviewIcon() {
   );
 }
 
+export function PlusIcon() {
+  return (
+    <svg {...common} aria-hidden="true">
+      <path d="M8 3v10M3 8h10" />
+    </svg>
+  );
+}
+
+export function MinusIcon() {
+  return (
+    <svg {...common} aria-hidden="true">
+      <path d="M3 8h10" />
+    </svg>
+  );
+}
+
 export function ArrowIcon() {
   return (
     <svg {...common} aria-hidden="true">

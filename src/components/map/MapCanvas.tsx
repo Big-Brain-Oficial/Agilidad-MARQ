@@ -8,11 +8,13 @@ import {
   centroMaqueta,
   escalaMaqueta,
   FUERA_DE_VISTA_GENERAL,
+  GRUPOS_MAPA,
   siluetaMaqueta,
   ubicacionesMarq,
   volumenesMarq,
 } from '@/content/mapa-resistencia';
 import { desplazarCentro, proyectar, type Camara } from './encuadre';
+import { MinusIcon, OverviewIcon, PlusIcon } from './icons';
 import styles from './MapHub.module.css';
 
 export interface MapCanvasHandle {
@@ -31,9 +33,16 @@ interface Props {
   onHover: (id: string | null) => void;
   /** Avisa si el mapa está en la vista general o si el visitante se movió. */
   onVistaGeneral: (activa: boolean) => void;
+  /** Botón de vista general del mapa: deselecciona y vuelve al encuadre inicial. */
+  onIrAVistaGeneral: () => void;
 }
 
 type Estado = 'cargando' | 'listo' | 'error';
+
+/** Grupo de desarrollos que, a esta distancia, se muestra en una sola tarjeta. */
+interface GrupoVisible { id: string; nombre: string; miembros: Desarrollo[] }
+
+const firmaGrupos = (grupos: GrupoVisible[]) => grupos.map((g) => `${g.id}:${g.miembros.map((d) => d.id)}`).join('|');
 
 const PITCH = 42;
 const BEARING = -12;
@@ -103,11 +112,10 @@ function ubicarTarjetas(
 }
 
 /**
- * Encuadre de la vista general: el zoom más cercano en el que entran todas las maquetas
- * (con su altura) y sus tarjetas, calculado con la inclinación real del mapa.
+ * El zoom más cercano en el que entran las maquetas (con su altura) y las tarjetas de
+ * `incluidos`, calculado con la inclinación real del mapa.
  */
-function camaraVistaGeneral(mapa: Mapa, desarrollos: Desarrollo[]) {
-  const incluidos = desarrollos.filter((d) => d.ubicacion && !FUERA_DE_VISTA_GENERAL.has(d.id));
+function camaraEncuadre(mapa: Mapa, incluidos: Desarrollo[]) {
   const { clientWidth: ancho, clientHeight: alto } = mapa.getContainer();
   const tarjeta = tarjetaEstimada(ancho);
   // Aire para el título de arriba y la ayuda de abajo (en celular, sólo la atribución).
@@ -155,12 +163,16 @@ function camaraVistaGeneral(mapa: Mapa, desarrollos: Desarrollo[]) {
   return { center: camara.centro, zoom: lejos, pitch: PITCH, bearing: BEARING };
 }
 
+/** Vista general: todos los desarrollos menos los que quedan lejos del resto. */
+const camaraVistaGeneral = (mapa: Mapa, desarrollos: Desarrollo[]) =>
+  camaraEncuadre(mapa, desarrollos.filter((d) => d.ubicacion && !FUERA_DE_VISTA_GENERAL.has(d.id)));
+
 /** Radio del halo dorado en píxeles: acompaña el tamaño de la maqueta en pantalla. */
-function paradasHalo() {
+function paradasHalo(factor = 1) {
   const paradas: number[] = [];
   for (let zoom = 12; zoom <= 19; zoom += 0.5) {
     const e = escalaMaqueta(zoom);
-    paradas.push(zoom, Math.round((34 * e.planta) / e.pixel));
+    paradas.push(zoom, Math.round((34 * factor * e.planta) / e.pixel));
   }
   return paradas;
 }
@@ -169,6 +181,7 @@ export const MapCanvas = forwardRef<MapCanvasHandle, Props>(function MapCanvas(p
   const { desarrollos, visibles, selectedId, hoveredId } = props;
   const containerRef = useRef<HTMLDivElement>(null);
   const tituloRef = useRef<HTMLDivElement>(null);
+  const controlesRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Mapa | null>(null);
   const callbacks = useRef(props);
   const terminarVuelo = useRef<(() => void) | null>(null);
@@ -176,8 +189,16 @@ export const MapCanvas = forwardRef<MapCanvasHandle, Props>(function MapCanvas(p
   const enVistaGeneral = useRef(true);
   const tamanos = useRef(new Map<string, { ancho: number; alto: number }>());
   const observadorTarjetas = useRef<ResizeObserver | null>(null);
+  // Zoom de encuadre de cada grupo, por tamaño del mapa y miembros visibles.
+  const zoomGrupos = useRef(new Map<string, number>());
   const [etiquetas, setEtiquetas] = useState<Record<string, Etiqueta>>({});
+  const [grupos, setGrupos] = useState<GrupoVisible[]>([]);
+  // Grupo bajo el mouse o con foco: ilumina las maquetas que reúne.
+  const [grupoEnFoco, setGrupoEnFoco] = useState<string | null>(null);
   const [compacto, setCompacto] = useState(true);
+  const [rumbo, setRumbo] = useState(BEARING);
+  const [zoomMinimo, setZoomMinimo] = useState(false);
+  const [zoomMaximo, setZoomMaximo] = useState(false);
   const [estado, setEstado] = useState<Estado>('cargando');
   const [error, setError] = useState('');
   const [intento, setIntento] = useState(0);
@@ -237,6 +258,25 @@ export const MapCanvas = forwardRef<MapCanvasHandle, Props>(function MapCanvas(p
       return { x: box.left + point.x, y: box.top + point.y };
     },
   }), [desarrollos, marcarVistaGeneral, volar]);
+
+  // Acerca el mapa hasta que el grupo se abre en tarjetas sueltas. Con teclado, el foco pasa
+  // a la primera de ellas: la tarjeta del grupo desaparece al llegar.
+  const abrirGrupo = useCallback(async (grupo: GrupoVisible, conTeclado: boolean) => {
+    const map = mapRef.current;
+    if (!map) return;
+    marcarVistaGeneral(false);
+    setGrupoEnFoco(null);
+    await volar({ ...camaraEncuadre(map, grupo.miembros), duration: 900 });
+    if (conTeclado) containerRef.current?.parentElement?.querySelector<HTMLElement>(`[data-id="${grupo.miembros[0].id}"]`)?.focus();
+  }, [marcarVistaGeneral, volar]);
+
+  const zoomPaso = useCallback((delta: number) => {
+    const map = mapRef.current;
+    if (!map) return;
+    marcarVistaGeneral(false);
+    terminarVuelo.current?.();
+    map.easeTo({ zoom: map.getZoom() + delta, duration: 350 });
+  }, [marcarVistaGeneral]);
 
   // Mide cada tarjeta una vez y cuando cambia (modo compacto, selección): el acomodo usa esas medidas.
   const observarTarjeta = useCallback((el: HTMLButtonElement | null) => {
@@ -319,7 +359,23 @@ export const MapCanvas = forwardRef<MapCanvasHandle, Props>(function MapCanvas(p
           const { lng, lat } = mapa.getCenter();
           const camara: Camara = { centro: [lng, lat], zoom, pitch: mapa.getPitch(), bearing: mapa.getBearing(), fov: mapa.getVerticalFieldOfView(), ancho, alto };
           const { visibles: ids, selectedId: elegido } = callbacks.current;
-          const puntos = desarrollos
+          // Un grupo se junta mientras el mapa esté más lejos que su propio encuadre: al tocarlo
+          // se vuela a ese encuadre y ahí ya se ve cada tarjeta. La elegida nunca se agrupa.
+          const agrupados: GrupoVisible[] = [];
+          for (const g of GRUPOS_MAPA) {
+            const miembros = desarrollos.filter((d) => d.ubicacion && ids.has(d.id) && d.id !== elegido && g.desarrollos.includes(d.id));
+            if (miembros.length < 2) continue;
+            const clave = `${ancho}x${alto}:${miembros.map((d) => d.id).join(',')}`;
+            let zoomGrupo = zoomGrupos.current.get(clave);
+            if (zoomGrupo === undefined) {
+              zoomGrupo = camaraEncuadre(mapa, miembros).zoom;
+              zoomGrupos.current.set(clave, zoomGrupo);
+            }
+            if (zoom < zoomGrupo - 0.2) agrupados.push({ id: `grupo-${g.id}`, nombre: g.nombre, miembros });
+          }
+          const grupoDe = new Map(agrupados.flatMap((g) => g.miembros.map((d) => [d.id, g] as const)));
+
+          const sueltos = desarrollos
             .filter((d) => d.ubicacion && ids.has(d.id))
             // La tarjeta elegida se ubica primero y conserva el mejor lugar.
             .sort((a, b) => Number(b.id === elegido) - Number(a.id === elegido))
@@ -331,18 +387,41 @@ export const MapCanvas = forwardRef<MapCanvasHandle, Props>(function MapCanvas(p
               const torre = { x1: Math.min(x, punta.x) - s.ancho / 2, y1: punta.y - s.ancho / 4, x2: Math.max(x, punta.x) + s.ancho / 2, y2: y + 4 };
               return { id: d.id, x, y, punta, torre };
             });
-          // Las tarjetas evitan el título de arriba y la franja de la ayuda (o la atribución) de abajo.
-          const titulo = tituloRef.current;
-          const ocupadas = titulo
-            ? [{ x1: titulo.offsetLeft, y1: titulo.offsetTop, x2: titulo.offsetLeft + titulo.offsetWidth, y2: titulo.offsetTop + titulo.offsetHeight }]
-            : [];
+          // Cada grupo ocupa el lugar de su primer miembro: nace en el centro de sus maquetas y
+          // reserva la caja que las contiene a todas.
+          const puntos: typeof sueltos = [];
+          for (const p of sueltos) {
+            const grupo = grupoDe.get(p.id);
+            if (!grupo) puntos.push(p);
+            else if (grupo.miembros[0].id === p.id) {
+              const suyos = sueltos.filter((o) => grupoDe.get(o.id) === grupo);
+              const media = (valores: number[]) => valores.reduce((a, b) => a + b, 0) / valores.length;
+              const x = media(suyos.map((o) => o.x));
+              puntos.push({
+                id: grupo.id, x, y: media(suyos.map((o) => o.y)),
+                punta: { x, y: Math.min(...suyos.map((o) => o.punta.y)) },
+                torre: {
+                  x1: Math.min(...suyos.map((o) => o.torre.x1)), y1: Math.min(...suyos.map((o) => o.torre.y1)),
+                  x2: Math.max(...suyos.map((o) => o.torre.x2)), y2: Math.max(...suyos.map((o) => o.torre.y2)),
+                },
+              });
+            }
+          }
+          // Las tarjetas evitan el título y los controles de arriba, y la franja de la ayuda (o la atribución) de abajo.
+          const ocupadas = [tituloRef.current, controlesRef.current].flatMap((el) =>
+            el ? [{ x1: el.offsetLeft, y1: el.offsetTop, x2: el.offsetLeft + el.offsetWidth, y2: el.offsetTop + el.offsetHeight }] : []);
           setEtiquetas(ubicarTarjetas(puntos, tamanos.current, { x1: 0, y1: 0, x2: ancho, y2: alto - (ancho < 600 ? 30 : 64) }, ocupadas, { ancho, alto }));
+          // Se re-dibuja en cada cuadro del movimiento: los grupos sólo se reemplazan si cambian.
+          setGrupos((antes) => firmaGrupos(antes) === firmaGrupos(agrupados) ? antes : agrupados);
           setCompacto(zoom < ZOOM_TARJETA_COMPLETA);
+          setZoomMinimo(zoom <= mapa.getMinZoom() + 0.01);
+          setZoomMaximo(zoom >= mapa.getMaxZoom() - 0.01);
         };
         reproyectar.current = actualizarTarjetas;
         mapa.on('move', actualizarTarjetas);
         mapa.on('resize', actualizarTarjetas);
         mapa.on('zoom', actualizarEscala);
+        mapa.on('rotate', () => setRumbo(mapa.getBearing()));
         // Arrastre, rueda, pellizco o teclado: el visitante dejó la vista general.
         mapa.on('movestart', (evento) => {
           if (evento.originalEvent) marcarVistaGeneral(false);
@@ -378,6 +457,18 @@ export const MapCanvas = forwardRef<MapCanvasHandle, Props>(function MapCanvas(p
               'circle-color': '#ffdf8c',
               'circle-blur': 0.7,
               'circle-opacity': 0.85,
+              'circle-pitch-alignment': 'map',
+            },
+          }, before);
+          // Halo más amplio e intenso bajo la maqueta elegida o señalada.
+          mapa.addLayer({
+            id: 'marq-luz-activa', type: 'circle', source: 'marq-ubicaciones',
+            filter: ['in', ['get', 'desarrollo'], ['literal', []]],
+            paint: {
+              'circle-radius': ['interpolate', ['linear'], ['zoom'], ...paradasHalo(1.8)],
+              'circle-color': '#ffcf6e',
+              'circle-blur': 0.55,
+              'circle-opacity': 0.95,
               'circle-pitch-alignment': 'map',
             },
           }, before);
@@ -436,14 +527,18 @@ export const MapCanvas = forwardRef<MapCanvasHandle, Props>(function MapCanvas(p
     const filtro: FilterSpecification = ['in', ['get', 'desarrollo'], ['literal', [...visibles]]];
     map.setFilter('marq-volumen', filtro);
     map.setFilter('marq-luz', filtro);
+    const enGrupo = grupos.find((g) => g.id === grupoEnFoco)?.miembros.map((d) => d.id) ?? [];
+    const activos = [selectedId, hoveredId, ...enGrupo].filter((id): id is string => !!id && visibles.has(id));
+    map.setFilter('marq-luz-activa', ['in', ['get', 'desarrollo'], ['literal', activos]]);
+    // La maqueta activa se aclara entera (cuerpo y basamento), no sólo un tono.
     map.setPaintProperty('marq-volumen', 'fill-extrusion-color', [
       'case',
-      ['all', ['==', ['get', 'color'], '#d7b277'], ['in', ['get', 'desarrollo'], ['literal', [selectedId, hoveredId].filter(Boolean)]]],
-      '#ebc989',
+      ['in', ['get', 'desarrollo'], ['literal', activos]],
+      ['match', ['get', 'color'], '#d7b277', '#f3d48f', '#bb985c', '#d9b471', ['get', 'color']],
       ['get', 'color'],
     ]);
     reproyectar.current?.();
-  }, [visibles, selectedId, hoveredId, estado]);
+  }, [visibles, selectedId, hoveredId, grupos, grupoEnFoco, estado]);
 
   return (
     <div className={styles.canvas}>
@@ -452,10 +547,57 @@ export const MapCanvas = forwardRef<MapCanvasHandle, Props>(function MapCanvas(p
         <span>Resistencia, Chaco</span>
         <h1>La ciudad, en perspectiva.</h1>
       </div>
+      <div ref={controlesRef} className={styles.mapControls}>
+        {/* El mapa está girado e inclinado: la brújula indica dónde queda el norte. */}
+        <span className={styles.compass} role="img" aria-label="Brújula: norte" title="Norte">
+          <svg viewBox="-15 -15 30 30" aria-hidden="true" style={{ transform: `rotate(${-rumbo}deg)` }}>
+            <text y="-7.6" textAnchor="middle">N</text>
+            <path d="M0 -6 2.6 1H-2.6Z" className={styles.compassNorte} />
+            <path d="M0 8 2.6 1H-2.6Z" />
+          </svg>
+        </span>
+        <div className={styles.zoomGroup} role="group" aria-label="Zoom del mapa">
+          <button type="button" aria-label="Acercar" title="Acercar" disabled={zoomMaximo} onClick={() => zoomPaso(1)}><PlusIcon /></button>
+          <button type="button" aria-label="Alejar" title="Alejar" disabled={zoomMinimo} onClick={() => zoomPaso(-1)}><MinusIcon /></button>
+        </div>
+        <button type="button" className={styles.controlOverview} aria-label="Vista general" title="Vista general: todos los desarrollos" onClick={props.onIrAVistaGeneral}>
+          <OverviewIcon />
+        </button>
+      </div>
       <ul className={styles.markers} data-compact={compacto || undefined} aria-label="Desarrollos ubicados en el mapa">
+        {grupos.map((g) => {
+          const p = etiquetas[g.id];
+          if (!p) return null;
+          const activo = g.id === grupoEnFoco || g.miembros.some((d) => d.id === hoveredId);
+          const tipo = g.miembros.every((d) => d.tipo === 'edificio') ? 'edificios' : 'desarrollos';
+          return (
+            <li key={g.id} className={styles.markerItem} hidden={!p.visible} style={{ transform: `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px)`, zIndex: activo ? 100000 : Math.round(p.y) }}>
+              <i className={styles.markerStem} style={{ height: Math.max(0, p.dy) }} aria-hidden="true" />
+              <button
+                ref={observarTarjeta}
+                type="button"
+                data-id={g.id}
+                data-grupo=""
+                className={styles.geoMarker}
+                style={{ transform: `translate(${p.dx}px, ${p.dy}px)` }}
+                data-active={activo ? '' : undefined}
+                aria-label={`Acercar el ${g.nombre.toLowerCase()}: ${g.miembros.map((d) => d.nombre).join(', ')}`}
+                // detail 0: lo activó el teclado (Enter o espacio), no un clic.
+                onClick={(evento) => void abrirGrupo(g, evento.detail === 0)}
+                onPointerEnter={() => setGrupoEnFoco(g.id)}
+                onPointerLeave={() => setGrupoEnFoco(null)}
+                onFocus={() => setGrupoEnFoco(g.id)}
+                onBlur={() => setGrupoEnFoco(null)}
+              >
+                <i aria-hidden="true">{g.miembros.length}</i>
+                <span><small>MARQ</small>{g.nombre} · {g.miembros.length} {tipo}<em>Acercá para ver cada uno →</em></span>
+              </button>
+            </li>
+          );
+        })}
         {desarrollos.filter(d => d.ubicacion && visibles.has(d.id)).map(d => {
           const p = etiquetas[d.id];
-          if (!p) return null;
+          if (!p || grupos.some((g) => g.miembros.includes(d))) return null;
           const activo = d.id === selectedId || d.id === hoveredId;
           return (
             <li
