@@ -96,7 +96,7 @@ export function DevelopmentPanel({ desarrollos, visibles, filtro, onFiltro, sele
           <p className={styles.intro}>
             Explorá Resistencia y descubrí los <strong>desarrollos MARQ</strong>. Seleccioná una maqueta para conocer el proyecto.
           </p>
-          <p className={styles.catalogNote}>Todos los proyectos se destacan en dorado. El recorrido inmersivo está disponible en Torre Natalini.</p>
+          <p className={styles.catalogNote}>El recorrido inmersivo está disponible en Torre Natalini.</p>
           <div className={styles.filters} role="group" aria-label="Filtrar desarrollos">
             {FILTROS.map((f) => (
               <button key={f.id} type="button" aria-pressed={filtro === f.id} onClick={() => onFiltro(f.id)}>
@@ -117,7 +117,7 @@ export function DevelopmentPanel({ desarrollos, visibles, filtro, onFiltro, sele
                     onPointerEnter={() => onHover(d.id)}
                     onPointerLeave={() => onHover(null)}
                   >
-                    <span className={styles.itemIcon} data-tipo={d.tipo} data-estado={d.estado}>
+                    <span className={styles.tipo} data-tipo={d.tipo} data-estado={d.estado}>
                       <TipoIcon tipo={d.tipo} />
                     </span>
                     <span className={styles.itemText}>
