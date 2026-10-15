@@ -86,6 +86,18 @@ El `.blend` original no sirve tal cual para la web: tiene ~2.000 objetos, materi
 - **DPR acotado** a 1,5 en calidad «Alta» y a 1 en «Fluida», para no sobrecargar pantallas de alta densidad.
 - **Un solo antialiasing**: el canvas se crea sin antialiasing y la escena siempre se dibuja en el búfer con MSAA del postproceso (`ArchvizPost`). Tener los dos duplicaba memoria de video y trabajo por cuadro.
 
+### Contexto urbano del recorrido
+
+`Surroundings.tsx` arma las manzanas vecinas con fachadas texturadas sobre volúmenes 3D, azoteas, veredas, asfalto, pintura vial, árboles y luminarias. Es una ambientación ilustrativa; no representa un relevamiento de las fachadas reales. Las fachadas permanecen fijas y conservan perspectiva y sombras al caminar o mirar desde el balcón.
+
+`urbanTextures.ts` genera cinco texturas originales de 512 × 512 (tres fachadas, asfalto y baldosas), sin solicitudes de red. Las UV mantienen el tamaño de ventanas y baldosas en metros. Las geometrías se agrupan por material; el montaje ocurre antes de la precarga de shaders y libera geometrías, materiales y texturas al salir. La calle y la vereda cercanas reciben capas visuales sobre las cotas del GLB; las colisiones del recorrido siguen usando el modelo original.
+
+`UrbanNature.tsx` agrega árboles con troncos ramificados y hojas recortadas: 64 planos por copa, instanciados en una sola malla para los 12 árboles. El canal alfa recorta hojas y sombras, sin ordenar transparencias por hoja. Una panorámica de ciudad y cielo ocupa un cilindro de 128 triángulos; acompaña a la cámara como fondo lejano y se funde con el cielo y el límite del suelo. Las dos imágenes WebP suman 378.132 bytes y aproximadamente 10 MiB de texturas RGBA con mipmaps. Sus prompts y procedencia están en [docs/URBAN-ASSETS.md](docs/URBAN-ASSETS.md).
+
+La capa `SCENERY_LAYER` se excluye solo del pase de normales de SSAO: ese material de reemplazo no respeta el alfa y produciría rectángulos en el follaje. El dibujo normal mantiene el recorte, la profundidad y las sombras estáticas. No se añaden luces dinámicas ni se regeneran hojas por cuadro.
+
+Validación visual y de circulación: `npm run build` y `node scripts/verify-archviz.mjs` contra un servidor local de producción (`ARCHVIZ_TEST_URL` permite elegir la URL). Las capturas quedan en `.cache/archviz-qa`.
+
 ## 4. Transición 2D ↔ 3D
 
 La cortina vive en el `layout` raíz, así que **sobrevive al cambio de ruta**:
@@ -109,6 +121,10 @@ Si alguien entra directo por URL, la cortina se cierra al instante y funciona co
 - **Acceso al edificio**: dos hojas de vidrio corredizas que se abren solas cuando el visitante está a menos de 3 m (`entranceDoor.ts`). Cada hoja tiene su propio BVH, que se mueve con ella. El modelo trae dos hojas fijas abiertas a 90°: se recortan del vidrio del hall al cargar, para no regenerar el GLB.
 - **Zonas**: la posición se compara con las cajas `ZONA__*` para mostrar dónde está el visitante (vereda, hall, ascensor, pasillo, departamento) y un texto breve.
 - **Información de objetos**: cada objeto con información (`OBJETOS_NATALINI` en `recorridos.ts`) tiene un punto en coordenadas de la escena donde flota un símbolo «i» (`InfoMarkers.tsx`, con `Html` de drei). No depende del GLB, porque las mallas vienen unidas por material. El símbolo se ve a menos de 12 m si un rayo contra el BVH no encuentra una pared en el medio. A menos de 2,5 m se resalta, aparece el aviso «I» y la tecla I abre una tarjeta que no pausa. Se cierra con I de nuevo o al alejarse más de 4,5 m.
+
+### Preparación de la cabina
+
+La copia del GLB y `prepareWorld` se ejecutan en el mismo cálculo de `World.tsx`. React puede repetir los cálculos de montaje en desarrollo: preparar dos veces la misma copia dejaba el piso y las paredes en una cabina anterior, mientras la cámara y las puertas viajaban en otra. Cada cálculo prepara ahora una escena nueva y conserva juntos modelo y datos de navegación.
 
 ## 6. MARQ Bus
 

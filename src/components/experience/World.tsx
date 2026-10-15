@@ -91,9 +91,12 @@ export function World({ url, debug, onReady }: { url: string; debug: boolean; on
   const sunlight = useRef<THREE.DirectionalLight>(null);
   const lastInterior = useRef<boolean | null>(null);
 
-  // Copia propia de la escena: el caché de useGLTF queda intacto si se vuelve a entrar.
-  const model = useMemo(() => gltf.scene.clone(true), [gltf]);
-  const world = useMemo(() => prepareWorld(model), [model]);
+  // prepareWorld mueve piezas del modelo a la cabina. React puede repetir este cálculo:
+  // cada ejecución necesita una copia nueva para no dejar piso y paredes en otra cabina.
+  const { model, world } = useMemo(() => {
+    const model = gltf.scene.clone(true);
+    return { model, world: prepareWorld(model) };
+  }, [gltf.scene]);
   const interiorLights = useMemo(() => groupInteriorLights(world), [world]);
   const pointLights = useRef<(THREE.PointLight | null)[]>([]);
   const lastUpstairs = useRef<boolean | null>(null);
@@ -172,7 +175,7 @@ export function World({ url, debug, onReady }: { url: string; debug: boolean; on
 
   return (
     <>
-      <Sky distance={2000} sunPosition={sunDir.clone().multiplyScalar(-1000).toArray()} turbidity={5} rayleigh={0.9} mieCoefficient={0.004} mieDirectionalG={0.82} />
+      <Sky ref={(sky) => { if (sky) sky.renderOrder = -20; }} distance={2000} sunPosition={sunDir.clone().multiplyScalar(-1000).toArray()} turbidity={5} rayleigh={0.9} mieCoefficient={0.004} mieDirectionalG={0.82} />
       <fog attach="fog" args={['#dfe5e8', 140, 900]} />
       <Environment files="/archviz/rooftop_day/hdri-1k.hdr" environmentIntensity={0.65} />
       <hemisphereLight args={['#e6eef5', '#b8ac98', 0.36]} />

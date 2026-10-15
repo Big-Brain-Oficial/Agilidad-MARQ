@@ -1,79 +1,156 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useLayoutEffect, useRef } from 'react';
+import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { createUrbanTextures, seededRandom } from './urbanTextures';
+import { UrbanNature } from './UrbanNature';
+import { SCENERY_LAYER } from './sceneryLayer';
 
-// Contexto urbano simple alrededor del lote: suelo, manzanas vecinas con volúmenes blancos
-// (lenguaje de maqueta) y algunos árboles en la vereda de enfrente. No colisiona: está más allá
-// de las paredes invisibles del recorrido.
-
-function rng(seed: number) {
-  return () => {
-    seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-const PALETTE = ['#f4f2ec', '#ece8df', '#e6e2d8', '#f8f7f3', '#dcd8cd'];
-
+// Ambientación ilustrativa, no un relevamiento de las manzanas reales de Resistencia.
+// Fachadas fijas sobre volúmenes: mantienen perspectiva y sombras al caminar y desde el balcón.
+// El contexto queda fuera de las colisiones; las superficies cercanas respetan el GLB existente.
 export function Surroundings() {
-  const { buildings, trunks, canopies } = useMemo(() => {
-    const rnd = rng(104);
-    const items: { x: number; z: number; w: number; d: number; h: number }[] = [];
-    const cell = 30;
-    for (let cx = -150; cx < 150; cx += cell) {
-      for (let cz = -150; cz < 150; cz += cell) {
-        // Fuera del área del recorrido (calle, vereda y terreno de la torre) más un margen.
-        if (cx + cell > -40 && cx < 40 && cz + cell > -26 && cz < 16) continue;
-        const n = 1 + Math.floor(rnd() * 3);
-        for (let i = 0; i < n; i++) {
-          const w = 8 + rnd() * 12, d = 8 + rnd() * 12;
-          const tall = rnd() < 0.18;
-          items.push({ x: cx + 4 + rnd() * (cell - 8 - w) + w / 2, z: cz + 4 + rnd() * (cell - 8 - d) + d / 2, w, d, h: tall ? 30 + rnd() * 45 : 6 + rnd() * 16 });
+  const root = useRef<THREE.Group>(null);
+  const gl = useThree((state) => state.gl);
+
+  useLayoutEffect(() => {
+    const group = root.current!;
+    const textures = createUrbanTextures(Math.min(8, gl.capabilities.getMaxAnisotropy()));
+    const random = seededRandom(104);
+    const materials = {
+      asphalt: new THREE.MeshStandardMaterial({ map: textures.asphalt, roughness: .96 }),
+      paving: new THREE.MeshStandardMaterial({ map: textures.paving, roughness: .9 }),
+      ground: new THREE.MeshStandardMaterial({ color: '#aaa796', roughness: 1 }),
+      terrain: new THREE.MeshStandardMaterial({
+        color: '#89917d', roughness: 1, depthWrite: false,
+        blending: THREE.CustomBlending, blendSrc: THREE.SrcAlphaFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
+        blendSrcAlpha: THREE.OneFactor, blendDstAlpha: THREE.OneMinusSrcAlphaFactor,
+      }),
+      paint: new THREE.MeshStandardMaterial({ color: '#e1ddc7', roughness: .95 }),
+      metal: new THREE.MeshStandardMaterial({ color: '#4c5452', roughness: .65, metalness: .35 }),
+      lamp: new THREE.MeshStandardMaterial({ color: '#e8e0c9', roughness: .6 }),
+    };
+    // Desvanece el límite del suelo hacia la foto para evitar un corte recto en el horizonte.
+    materials.terrain.onBeforeCompile = (shader) => {
+      shader.vertexShader = 'varying vec2 vUrbanGround;\n' + shader.vertexShader;
+      shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', `
+        #include <begin_vertex>
+        vUrbanGround = (modelMatrix * vec4(transformed, 1.0)).xz;
+      `);
+      shader.fragmentShader = 'varying vec2 vUrbanGround;\n' + shader.fragmentShader;
+      shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', `
+        #include <color_fragment>
+        float edge = max(abs(vUrbanGround.x), abs(vUrbanGround.y));
+        diffuseColor.a *= 1.0 - smoothstep(160.0, 220.0, edge);
+      `);
+    };
+    materials.terrain.customProgramCacheKey = () => 'urban-ground-edge-fade-v1';
+    const facades = textures.facades.map((map) => new THREE.MeshStandardMaterial({ map, roughness: .82 }));
+    const batches = new Map<THREE.MeshStandardMaterial, THREE.BufferGeometry[]>();
+    const add = (geometry: THREE.BufferGeometry, material: THREE.MeshStandardMaterial) => {
+      const batch = batches.get(material) ?? [];
+      batch.push(geometry);
+      batches.set(material, batch);
+    };
+    const box = (x: number, y: number, z: number, w: number, h: number, d: number, material: THREE.MeshStandardMaterial) => {
+      const geometry = new THREE.BoxGeometry(w, h, d);
+      if (material === materials.paving) {
+        const uv = geometry.getAttribute('uv');
+        const position = geometry.getAttribute('position');
+        for (let i = 0; i < uv.count; i++) uv.setXY(i, (position.getX(i) + x) / 4, (position.getZ(i) + z) / 4);
+      }
+      geometry.translate(x, y, z);
+      add(geometry, material);
+    };
+    const surface = (x: number, y: number, z: number, w: number, d: number, material: THREE.MeshStandardMaterial, tile = 4) => {
+      const geometry = new THREE.PlaneGeometry(w, d).rotateX(-Math.PI / 2).translate(x, y, z);
+      const uv = geometry.getAttribute('uv');
+      const position = geometry.getAttribute('position');
+      for (let i = 0; i < uv.count; i++) uv.setXY(i, position.getX(i) / tile, position.getZ(i) / tile);
+      add(geometry, material);
+    };
+
+    surface(0, -.33, 0, 440, 440, materials.terrain);
+    // Calle del modelo: z = 2…12, superficie a y = -0,11. La capa evita coplanaridad.
+    const streets = [-113, -53, 7, 67, 127];
+    const avenues = [-180, -120, -60, 60, 120, 180];
+    for (const z of streets) surface(0, -.104, z, 370, 10, materials.asphalt);
+    for (const x of avenues) surface(x, -.108, 7, 10, 300, materials.asphalt);
+    for (let row = 0; row < streets.length - 1; row++) {
+      const z = streets[row];
+      for (let col = 0; col < avenues.length - 1; col++) {
+        const left = avenues[col], right = avenues[col + 1];
+        // No superponer una manzana con el terreno ni el acceso de Natalini.
+        if (!(left === -60 && z === -53)) {
+          box((left + right) / 2, -.12, z + 30, right - left - 10, .24, 50, materials.paving);
+        }
+        for (let x = left + 16; x <= right - 16; x += 22) for (const bz of [z + 20, z + 43]) {
+          const w = 13 + Math.floor(random() * 5), d = 13 + Math.floor(random() * 5);
+          if (x + w / 2 > -40 && x - w / 2 < 40 && bz + d / 2 > -26 && bz - d / 2 < 18) continue;
+          const floors = random() < .15 ? 10 + Math.floor(random() * 10) : 2 + Math.floor(random() * 5);
+          const h = floors * 3.2;
+          const geometry = new THREE.BoxGeometry(w, h, d);
+          const uv = geometry.getAttribute('uv');
+          const normal = geometry.getAttribute('normal');
+          for (let i = 0; i < uv.count; i++) {
+            // Techos lisos, ventanas a escala constante en ambas orientaciones.
+            if (Math.abs(normal.getY(i)) > .5) uv.setXY(i, .012, .012);
+            else uv.setXY(i, uv.getX(i) * (Math.abs(normal.getX(i)) > .5 ? d : w) / 12, uv.getY(i) * h / 12.8);
+          }
+          geometry.translate(x, h / 2, bz);
+          add(geometry, facades[Math.floor(random() * facades.length)]);
+          // Remate de azotea y pequeño volumen técnico, visibles desde el departamento.
+          box(x, h + .16, bz, w + .25, .32, d + .25, materials.ground);
+          box(x + w * .18, h + .7, bz, 3, 1.1, 2.5, materials.paving);
         }
       }
     }
-    const geo = new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0);
-    const mat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.9 });
-    const mesh = new THREE.InstancedMesh(geo, mat, items.length);
-    const m = new THREE.Matrix4(), color = new THREE.Color();
-    items.forEach((b, i) => {
-      m.compose(new THREE.Vector3(b.x, -0.3, b.z), new THREE.Quaternion(), new THREE.Vector3(b.w, b.h, b.d));
-      mesh.setMatrixAt(i, m);
-      mesh.setColorAt(i, color.set(PALETTE[i % PALETTE.length]));
-    });
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
+    surface(0, .012, 1.6, 27, 3.2, materials.paving);
+    // Continuidad de la vereda propia, conservando el espacio del acceso.
+    for (const x of [-34.25, 34.25]) box(x, -.12, .7, 41.5, .24, 5, materials.paving);
 
-    // Árboles en la vereda de enfrente.
-    const treePos = Array.from({ length: 12 }, (_, i) => new THREE.Vector3(-30 + i * 5.4, -0.3, 14.2));
-    const trunkMesh = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.12, 0.18, 2.6, 6).translate(0, 1.3, 0), new THREE.MeshStandardMaterial({ color: '#7a6450' }), treePos.length);
-    const canopyMesh = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1.6, 1), new THREE.MeshStandardMaterial({ color: '#7f9a69', roughness: 0.9, flatShading: true }), treePos.length);
-    treePos.forEach((p, i) => {
-      trunkMesh.setMatrixAt(i, m.makeTranslation(p.x, p.y, p.z));
-      const s = 0.9 + rnd() * 0.4;
-      canopyMesh.setMatrixAt(i, m.compose(new THREE.Vector3(p.x, p.y + 3.4, p.z), new THREE.Quaternion(), new THREE.Vector3(s, s * 1.1, s)));
-    });
-    trunkMesh.castShadow = canopyMesh.castShadow = true;
-    return { buildings: mesh, trunks: trunkMesh, canopies: canopyMesh };
-  }, []);
+    // Pintura vial fija sobre la calzada. Se interrumpe en las calles transversales.
+    for (const z of streets) for (let x = -175; x <= 175; x += 7) {
+      if (avenues.some((avenue) => Math.abs(x - avenue) < 8)) continue;
+      surface(x, -.096, z, 3, .12, materials.paint);
+    }
+    for (const x of [-51.5, 51.5]) {
+      for (let z = 3; z < 12; z += 1.25) surface(x, -.094, z, 3.5, .65, materials.paint);
+    }
 
-  return (
-    <>
-      <mesh rotation-x={-Math.PI / 2} position={[0, -0.32, -5]} receiveShadow>
-        <planeGeometry args={[900, 900]} />
-        <meshStandardMaterial color="#cdc9be" roughness={1} />
-      </mesh>
-      {/* Vereda de enfrente. */}
-      <mesh position={[0, -0.2, 14.6]} receiveShadow>
-        <boxGeometry args={[80, 0.24, 5]} />
-        <meshStandardMaterial color="#b9b5ab" roughness={0.9} />
-      </mesh>
-      <primitive object={buildings} />
-      <primitive object={trunks} />
-      <primitive object={canopies} />
-    </>
-  );
+    // Alumbrado de la vereda opuesta, sin invadir el área transitable.
+    for (const x of [-26, -8, 10, 28]) {
+      add(new THREE.CylinderGeometry(.065, .12, 6, 8).translate(x, 3, 13.1), materials.metal);
+      box(x, 5.95, 12.45, .12, .12, 1.4, materials.metal);
+      box(x, 5.88, 11.8, .38, .12, .8, materials.lamp);
+    }
+
+    // Una malla por material: ventanas y señalización no agregan cientos de draw calls.
+    for (const [material, geometries] of batches) {
+      const geometry = mergeGeometries(geometries);
+      geometries.forEach((source) => source.dispose());
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.name = `Entorno urbano · ${material.map?.name || material.uuid}`;
+      mesh.castShadow = material !== materials.asphalt && material !== materials.paint && material !== materials.terrain;
+      if (material === materials.terrain) {
+        mesh.layers.set(SCENERY_LAYER);
+        mesh.renderOrder = -5;
+      }
+      mesh.receiveShadow = true;
+      group.add(mesh);
+    }
+    gl.shadowMap.needsUpdate = true;
+    return () => {
+      for (const child of [...group.children]) {
+        if (child instanceof THREE.Mesh) child.geometry.dispose();
+        group.remove(child);
+      }
+      [...Object.values(materials), ...facades].forEach((material) => material.dispose());
+      textures.dispose();
+    };
+  }, [gl]);
+
+  return <><group ref={root} name="Contexto urbano Natalini" /><UrbanNature /></>;
 }
