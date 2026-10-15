@@ -848,9 +848,10 @@ for key,room in PLAN['rooms'].items():
         raise AssertionError((key,measured,expected))
     checks.append({'id':key,'expected':expected,'measured':measured,'source':PLAN['source']})
 report={'units':'m','dimensionChecks':checks,'assumptions':A,'netAreaNotCertified':True,'publishedArea':97,'blender':bpy.app.version_string}
-(OUT/'archviz-verification.json').write_text(json.dumps(report,indent=2,ensure_ascii=False),encoding='utf-8')
+cache = ROOT / '.cache/models'
+cache.mkdir(parents=True, exist_ok=True)
+(cache/'archviz-verification.json').write_text(json.dumps(report,indent=2,ensure_ascii=False),encoding='utf-8')
 S.frame_set(1)
-# Recursos empaquetados para que el archivo de autoría sea transportable.
-bpy.ops.file.pack_all()
-bpy.ops.wm.save_as_mainfile(filepath=str(OUT/'Torre_Natalini_ArchViz.blend'),compress=True)
+# export_web.py continúa con esta escena en memoria. No guardar ni empaquetar:
+# la exportación web no debe modificar archivos de autoría ni crear respaldos.
 print('ARCHVIZ_REBUILD_OK',json.dumps({'rooms':len(checks),'objects':len(S.objects),'height':H}))

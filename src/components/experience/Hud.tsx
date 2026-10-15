@@ -34,6 +34,7 @@ function Controls() {
 
 function VisitSettings() {
   const quality = useExperience((s) => s.quality);
+  const softwareRenderer = useExperience((s) => s.softwareRenderer);
   const atmosphere = useExperience((s) => s.atmosphere);
   const views = useExperience((s) => s.views);
   return (
@@ -60,6 +61,11 @@ function VisitSettings() {
           </select>
         </label>
       </div>
+      {softwareRenderer && (
+        <p className={styles.note} role="status">
+          Activá la aceleración por hardware en tu navegador para una mejor experiencia.
+        </p>
+      )}
     </div>
   );
 }
