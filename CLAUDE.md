@@ -39,6 +39,7 @@ No hay lint configurado. Antes de dar un cambio por terminado, correr `npm run t
 ## Trampas conocidas
 
 - **Pointer lock:** `PointerLockControls` debe recibir `domElement={gl.domElement}`. Por defecto drei usa el `div` contenedor de R3F, pero el bloqueo se pide sobre el canvas; sin ese prop, `onLock` nunca se dispara y «Comenzar recorrido» no cierra el panel.
+- **iPhone/iPad:** no hay pointer lock; en iOS el recorrido usa `TouchControls` (joystick y arrastre) y `lock()` sólo pasa a `playing`. Android sigue con el aviso de `ExperienceGate`. La emulación de iPhone de Chrome sirve para un primer vistazo, pero los cambios táctiles hay que probarlos en un iPhone real (Safari).
 - **`?debug` no prueba la captura del mouse:** pasa directo a la fase `playing`. Cualquier cambio en el inicio, la pausa o los controles hay que probarlo en un navegador real sin `?debug`.
 - **Rendimiento en Windows (Direct3D):** compilar shaders congela la página. Por eso:
   - el canvas usa `frameloop="never"` hasta que `compileAsync` termina;

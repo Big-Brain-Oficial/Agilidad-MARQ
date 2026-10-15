@@ -1,6 +1,7 @@
 'use client';
 
 import { TIPOS, type Desarrollo } from '@/content/desarrollos';
+import { BrandLogo } from '@/components/brand/BrandLogo';
 import { ArrowIcon, OverviewIcon, TipoIcon } from './icons';
 import styles from './MapHub.module.css';
 
@@ -33,9 +34,8 @@ export function DevelopmentPanel({ desarrollos, visibles, filtro, onFiltro, sele
   return (
     <aside className={styles.panel} aria-label="Desarrollos de MARQ">
       <header className={styles.brand}>
-        <span className={styles.brandMark}>MARQ</span>
+        <BrandLogo className={styles.brandLogo} />
         <span className={styles.brandSub}>
-          <strong>Experience</strong>
           <span>Viví MARQ antes de vivir en MARQ</span>
         </span>
       </header>
@@ -131,6 +131,10 @@ export function DevelopmentPanel({ desarrollos, visibles, filtro, onFiltro, sele
           </ul>
         </section>
       )}
+
+      <footer className={styles.disclaimer}>
+        Muestra académica. Sitio no oficial, sin relación con MARQ.
+      </footer>
     </aside>
   );
 }

@@ -6,8 +6,8 @@ export const contentType = 'image/png';
 
 export default function Image() {
   return tarjetaPreview({
+    // Sin `titulo`: el wordmark ya dice «MARQ Experience».
     etiqueta: 'Estudio MARQ',
-    titulo: 'MARQ Experience',
     bajada: 'Recorré los desarrollos de MARQ en el mapa y entrá a la Torre Natalini en primera persona.',
   });
 }
