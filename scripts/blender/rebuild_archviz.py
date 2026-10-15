@@ -293,11 +293,13 @@ for key, room in PLAN['rooms'].items():
     floors.append(floor)
     if key != 'balcony':
         box('Techo '+key, (x+w/2, y+d/2, H+.09), (w+.14, d+.14, .18), 'concrete', .002, '09_TECHOS', collide=True)
-for x1, y1, x2, y2 in [(3.6, 3.54, 5.34, 4.84), (3.6, 4.84, 5.34, 6.42), (5.34, 3.4, 6.95, 7.45), (6.95, 3.35, 8.55, 5.2), (0, 2.5, 1.55, 3.54)]:
+# La circulación termina donde empieza la piedra del baño (y=6.17).
+# La franja junto al dormitorio llega hasta el umbral, sin duplicar su superficie.
+for x1, y1, x2, y2 in [(3.6, 3.54, 5.34, 4.84), (3.6, 4.84, 5.34, 6.17), (3.6, 6.17, 3.9, 6.24), (5.34, 3.4, 6.95, 7.45), (6.95, 3.35, 8.55, 5.2), (0, 2.5, 1.55, 3.54)]:
     box('Suelo circulacion', ((x1+x2)/2, (y1+y2)/2, -.065), (x2-x1, y2-y1, .13), 'oak', 0, '06_DEPTO_MUROS', collide=True)
     box('Techo circulacion', ((x1+x2)/2, (y1+y2)/2, H+.09), (x2-x1+.14, y2-y1+.14, .18), 'concrete', .002, '09_TECHOS', collide=True)
 # Parches bajos bajo tabiques; eliminan fisuras sin alterar las cotas libres.
-for x1, y1, x2, y2 in [(0, 6.24, 3.9, 6.42), (3.9, 6.17, 4.02, 9.12), (5.22, 6.17, 5.34, 9.12), (0, 3.4, 6.95, 3.54), (1.45, 0, 1.55, 2.5)]:
+for x1, y1, x2, y2 in [(0, 6.24, 3.9, 6.42), (3.9, 6.17, 4.02, 9.12), (5.22, 6.17, 5.34, 9.12), (1.55, 3.4, 5.34, 3.54), (1.45, 0, 1.55, 2.5)]:
     box('Umbral continuo', ((x1+x2)/2, (y1+y2)/2, -.065), (x2-x1, y2-y1, .13), 'oak', 0, '06_DEPTO_MUROS', collide=True)
 
 # Envolvente y tabiques. Las caras interiores coinciden con los rectángulos acotados.
@@ -611,8 +613,10 @@ def bed(x,y,w=1.55,l=2.0):
         vase(xx,y+l*.33,.423,.065,.15,'ceramic')
 
 
-bed(1.62,7.80)
-bed(1.38,4.75,1.0,1.9)
+# Cabeceras próximas a la pared y 69 cm libres al pie de ambas bases.
+# Las cotas de los ambientes se conservan; el proxy sigue el tamaño de la cama.
+bed(1.62,8.06,1.40,1.90)
+bed(1.38,5.18,.90,1.90)
 for x,y,w,d in [(3.60,8.28,.60,1.65),(4.71,4.12,.96,1.03)]:
     box('Placard cuerpo', (x,y,1.24), (w,d,2.48), 'white', .004)
     for yy in [y-d/4,y+d/4]:
@@ -659,8 +663,18 @@ for x in [1.69,8.43]:
     place(obj,obj.name,'ivory');metric_uv(obj,.5)
     for p in mesh.polygons:p.use_smooth=True
     mod=obj.modifiers.new('Tejido espesor','SOLIDIFY');mod.thickness=.001
-for x,y,rot in [(5.12,3.392,0),(3.575,5.3,math.pi/2),(5.32,6.0,math.pi/2)]:
-    ob=box('Toma electrico', (x,y,.30), (.075,.009,.08), 'white', .003);ob.rotation_euler.z=rot
+# Cada toma se apoya en la cara de un tabique real; la posición longitudinal se
+# mide desde su centro. Así acompaña al muro aunque cambie su espesor o ubicación.
+for name, along, side in [('Sur dormitorios',2.48,-1), ('Quiebre dormitorio 2',-.21,-1), ('Este baño',-.99,-1)]:
+    backing=bpy.data.objects[name]
+    angle=backing.rotation_euler.z
+    normal=Vector((-math.sin(angle),math.cos(angle),0))
+    tangent=Vector((math.cos(angle),math.sin(angle),0))
+    loc=backing.location-OFFSET+tangent*along+normal*side*(backing.dimensions.y/2+.009/2)
+    loc.z=.30
+    ob=box('Toma electrico',loc,(.075,.009,.08),'white',.003)
+    ob.rotation_euler.z=angle
+    ob['archviz_wall']=name
 
 # Un techo continuo elimina solapes coplanares en encuentros de ambientes.
 for obj in list(bpy.data.collections['09_TECHOS'].objects):
