@@ -12,7 +12,9 @@ export const TAMANO_PREVIEW = { width: 1200, height: 630 };
 const LOGO_ALTO = 108;
 const LOGO_ANCHO = Math.round((LOGO_ALTO * 1122) / 415);
 
-export async function tarjetaPreview({ etiqueta, titulo, bajada }: { etiqueta: string; titulo: string; bajada: string }) {
+// `titulo` es opcional: en la home el wordmark ya dice «MARQ Experience», así que
+// no se repite; el recorrido lo usa para el nombre del desarrollo (p. ej. Torre Natalini).
+export async function tarjetaPreview({ etiqueta, titulo, bajada }: { etiqueta: string; titulo?: string; bajada: string }) {
   const logo = await readFile(join(process.cwd(), 'public/brand/marq-experience.svg'));
   const logoSrc = `data:image/svg+xml;base64,${logo.toString('base64')}`;
 
@@ -35,7 +37,7 @@ export async function tarjetaPreview({ etiqueta, titulo, bajada }: { etiqueta: s
         <img src={logoSrc} width={LOGO_ANCHO} height={LOGO_ALTO} alt="" />
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <div style={{ fontSize: 26, letterSpacing: 4, textTransform: 'uppercase', color: '#a4070f' }}>{etiqueta}</div>
-          <div style={{ fontSize: 72, lineHeight: 1.05, marginTop: 16 }}>{titulo}</div>
+          {titulo && <div style={{ fontSize: 72, lineHeight: 1.05, marginTop: 16 }}>{titulo}</div>}
           <div style={{ fontSize: 32, lineHeight: 1.35, marginTop: 24, color: '#5a5650' }}>{bajada}</div>
         </div>
       </div>
