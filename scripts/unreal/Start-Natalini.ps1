@@ -1,4 +1,4 @@
-param(
+﻿param(
     [string]$SignallingUrl = 'ws://127.0.0.1:8888',
     [ValidateSet('equilibrado', 'calidad')][string]$Profile = 'equilibrado'
 )
@@ -13,8 +13,8 @@ $editor = Join-Path $engine 'Engine/Binaries/Win64/UnrealEditor.exe'
 $resolution = if ($Profile -eq 'calidad') { @('-ResX=1920', '-ResY=1080') } else { @('-ResX=1600', '-ResY=900') }
 $scale = if ($Profile -eq 'calidad') { 100 } else { 75 }
 $argsList = @("`"$NataliniProject`"", '/Game/Natalini/Maps/Natalini', '-game', '-RenderOffscreen', '-AudioMixer',
-    '-ForceRes', '-Windowed', '-Unattended', "`"-PixelStreamingURL=$SignallingUrl`"", '-PixelStreamingEncoderCodec=H264',
-    "`"-ExecCmds=t.MaxFPS 30,r.ScreenPercentage $scale`"") + $resolution
+    '-ForceRes', '-Windowed', '-Unattended', "`"-PixelStreamingURL=$SignallingUrl`"",
+    "`"-ExecCmds=t.MaxFPS 30,r.ScreenPercentage $scale,PixelStreaming2.Encoder.Codec H264,PixelStreaming2.WebRTC.Fps 30`"") + $resolution
 $process = Start-Process -FilePath $editor -ArgumentList $argsList -WindowStyle Hidden -PassThru
 Write-Host "Unreal iniciado (PID $($process.Id)). El reproductor confirmará cuándo hay video. Para detenerlo: Stop-Process -Id $($process.Id)"
 Write-Host 'También debe estar encendido el servidor de señalización UE5.7. Ver docs/UNREAL-NATALINI.md.'

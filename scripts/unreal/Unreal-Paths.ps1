@@ -1,4 +1,4 @@
-$ErrorActionPreference = 'Stop'
+﻿$ErrorActionPreference = 'Stop'
 $NataliniRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
 $NataliniProject = Join-Path $NataliniRoot 'unreal/Natalini/Natalini.uproject'
 

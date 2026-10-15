@@ -7,6 +7,7 @@
     { "Name": "PixelStreaming2", "Enabled": true },
     { "Name": "PythonScriptPlugin", "Enabled": true, "TargetAllowList": ["Editor"] },
     { "Name": "EditorScriptingUtilities", "Enabled": true, "TargetAllowList": ["Editor"] },
-    { "Name": "Interchange", "Enabled": true }
+    { "Name": "Interchange", "Enabled": true },
+    { "Name": "AndroidFileServer", "Enabled": false }
   ]
 }

@@ -1,4 +1,4 @@
-param([switch]$Replace)
+﻿param([switch]$Replace)
 . (Join-Path $PSScriptRoot 'Unreal-Paths.ps1')
 $engine = Get-NataliniEngine
 $source = Join-Path $NataliniRoot '.cache/unreal/source.json'

@@ -12,7 +12,9 @@
     "archviz:assets": "node scripts/archviz-assets.mjs",
     "unreal:prepare": "node scripts/unreal/prepare.mjs",
     "unreal:import": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/unreal/Import-Natalini.ps1",
-    "unreal:stream": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/unreal/Start-Natalini.ps1"
+    "unreal:stream": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/unreal/Start-Natalini.ps1",
+    "unreal:setup-streaming": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/unreal/Setup-Streaming.ps1",
+    "unreal:server": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/unreal/Start-Signalling.ps1"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",
