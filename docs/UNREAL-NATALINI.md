@@ -84,6 +84,15 @@ MARQ_UNREAL_PLAYER_URL=http://localhost:8080/player.html
 
 Reiniciar el servidor de Next (o reconstruir producción). Abrir `/evaluacion/natalini`. La URL configura la **página del reproductor**, no `ws://localhost:8888`. El iframe se monta al pulsar «Abrir Unreal»; cerrarlo libera la conexión del navegador, pero no detiene el proceso Unreal. «Reconectar» vuelve a cargar el reproductor. No se interpreta la carga del iframe como confirmación de video.
 
+Para dejar la página local en segundo plano, con logs propios y comprobación HTTP de arranque:
+
+```powershell
+npm run build
+npm run unreal:preview
+```
+
+La comparación queda en `http://127.0.0.1:3114/evaluacion/natalini` y el acceso directo a Unreal en `http://127.0.0.1:3114/recorrido/torre-natalini/unreal`. El recorrido habitual `/recorrido/torre-natalini` sigue siendo Three.js. Ambos motores se usan desde la web; el nombre «web» por sí solo no permite distinguirlos.
+
 Si la configuración de seguridad del servidor impide mostrar el reproductor en un iframe, usar «Abrir aparte» o permitir el origen de MARQ en su política `frame-ancestors`. Para una demo externa se requiere HTTPS para la página del reproductor, WSS para señalización y STUN/TURN según la red; cambiar la URL local por la del servidor. `localhost` en el equipo del cliente no apunta a tu PC. No poner credenciales privadas en la URL: es pública para el navegador.
 
 Una sesión estándar comparte cámara y controles entre los visitantes. Para recorridos independientes hay que asignar una instancia de Unreal por sesión y resolver el acceso/capacidad del servidor antes de publicarlo ampliamente.

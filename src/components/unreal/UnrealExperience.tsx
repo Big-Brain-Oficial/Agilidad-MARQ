@@ -40,7 +40,7 @@ export function UnrealExperience({ playerUrl }: { playerUrl: string | null }) {
               ? 'La experiencia se transmite desde el equipo que ejecuta Unreal. Al abrirla, el reproductor te indicará si está disponible.'
               : 'Estamos preparando el proyecto de Unreal y su conexión. Mientras tanto, podés recorrer la versión web.'}</p>
             {playerUrl && <button className="btn btn-primary" type="button" onClick={() => setOpened(true)}>Abrir Unreal</button>}
-            <Link className="btn btn-ghost" href="/recorrido/torre-natalini">Ir al recorrido web</Link>
+            <Link className="btn btn-ghost" href="/recorrido/torre-natalini">Abrir versión Three.js</Link>
           </section>
           <p className={styles.note}>Navegación libre con mouse y teclado: WASD para moverte, E para subir y Q para bajar. El ascensor, las puertas automáticas y el panel informativo están pendientes de adaptación.</p>
         </div>
