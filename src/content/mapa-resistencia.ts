@@ -19,6 +19,16 @@ const HUELLA: [number, number][] = [
 // achica tanto el mapa que las torres del centro se amontonan. Se llega desde la lista.
 export const FUERA_DE_VISTA_GENERAL = new Set(['pueblo-mio']);
 
+// Desarrollos tan cercanos que, de lejos, sus tarjetas se pisan: hasta que el mapa los
+// encuadra a ellos solos se muestran en una sola tarjeta que, al tocarla, acerca el mapa.
+export const GRUPOS_MAPA = [
+  {
+    id: 'microcentro',
+    nombre: 'Microcentro',
+    desarrollos: ['torre-natalini', 'torre-vista', 'uno-boulevard', 'edificio-gaba', 'torre-nbch', 'torre-panorama'],
+  },
+];
+
 // ---- Escala de las maquetas --------------------------------------------------------
 //
 // Las maquetas usan una escala gráfica que cambia con el zoom: de lejos crecen para seguir
