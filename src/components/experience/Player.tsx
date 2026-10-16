@@ -45,6 +45,13 @@ interface Interactable {
 
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
+// Abre un perfil de LinkedIn en otra pestaña. Antes suelta el puntero: así el recorrido queda en
+// pausa y el navegador no bloquea la ventana nueva por tenerlo capturado.
+function openLinkedin(url: string) {
+  if (typeof document !== 'undefined' && document.pointerLockElement) document.exitPointerLock();
+  window.open(url, '_blank', 'noopener,noreferrer');
+}
+
 export function Player({ world, debug }: { world: WorldData; debug: boolean }) {
   const camera = useThree((s) => s.camera);
   const gl = useThree((s) => s.gl);
@@ -103,6 +110,8 @@ export function Player({ world, debug }: { world: WorldData; debug: boolean }) {
     const click = () => {
       const ui = useExperience.getState();
       if (ui.phase !== 'playing' || !document.pointerLockElement) return;
+      // El cuadro del equipo bajo la mira abre su LinkedIn (sale del puntero: lo hace el navegador).
+      if (ui.linkAim) { openLinkedin(ui.linkAim.linkedin); return; }
       // El clic vale como la tecla I: el símbolo «i» bajo la mira tiene prioridad sobre la acción
       // de la tecla E, y sin acción abre la tarjeta del objeto cercano (o cierra la abierta).
       if (ui.aim) ui.toggleInfo(ui.aim);

@@ -103,6 +103,7 @@ export function Hud({ desarrollo }: { desarrollo: Desarrollo }) {
   const infoId = useExperience((s) => s.info);
   const infoOpenId = useExperience((s) => s.infoOpen);
   const aimId = useExperience((s) => s.aim);
+  const linkAim = useExperience((s) => s.linkAim);
   const touch = useExperience((s) => s.touch);
   const seen = OBJETOS_NATALINI.find((o) => o.id === (aimId ?? infoId));
   const open = OBJETOS_NATALINI.find((o) => o.id === infoOpenId);
@@ -162,6 +163,16 @@ export function Hud({ desarrollo }: { desarrollo: Desarrollo }) {
             ) : (
               <div className={styles.prompt}>
                 <kbd>Clic</kbd> / <kbd>I</kbd> {seen.nombre} · más información
+              </div>
+            ))}
+            {/* Cuadro del equipo bajo la mira: abre su LinkedIn (en táctil, tocando el aviso). */}
+            {linkAim && (touch ? (
+              <a className={styles.prompt} href={linkAim.linkedin} target="_blank" rel="noopener noreferrer">
+                <span className={styles.promptLink} aria-hidden="true">in</span> {linkAim.nombre} · ver LinkedIn
+              </a>
+            ) : (
+              <div className={styles.prompt}>
+                <kbd>Clic</kbd> {linkAim.nombre} · ver LinkedIn
               </div>
             ))}
           </div>

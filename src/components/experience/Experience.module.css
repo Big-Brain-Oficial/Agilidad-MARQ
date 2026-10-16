@@ -438,6 +438,22 @@
   background: var(--accent);
   font: italic 700 15px/1 Georgia, 'Times New Roman', serif;
 }
+/* Insignia de LinkedIn en el aviso del cuadro del equipo. */
+.promptLink {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 22px;
+  border-radius: 5px;
+  background: #0a66c2;
+  color: #fff;
+  font: 700 12px/1 var(--font-display);
+  text-transform: lowercase;
+}
+a.prompt {
+  text-decoration: none;
+}
 .root[data-touch] .info {
   pointer-events: auto;
 }
