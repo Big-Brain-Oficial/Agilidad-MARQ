@@ -46,6 +46,7 @@ export default function Experience({ desarrollo, debug = false }: { desarrollo: 
   const [rendererReady, setRendererReady] = useState(false);
   const quality = useExperience((s) => s.quality);
   const touch = useExperience((s) => s.touch);
+  const hudMinimo = useExperience((s) => s.hudMinimo);
 
   useLayoutEffect(() => {
     useExperience.getState().reset();
@@ -63,13 +64,13 @@ export default function Experience({ desarrollo, debug = false }: { desarrollo: 
   }, []);
 
   return (
-    <div className={styles.root} data-touch={touch || undefined}>
+    <div className={styles.root} data-touch={touch || undefined} data-min={hudMinimo || undefined}>
       <div id="marq-lock-target" className={styles.canvas}>
         <Canvas
           shadows={quality === 'alta' ? 'percentage' : false}
           frameloop={ready ? 'always' : 'never'}
-          // En el teléfono, DPR 1 se ve borroso (pantallas de 3×); 1,5 sigue siendo liviano.
-          dpr={[1, quality === 'alta' || touch ? 1.5 : 1]}
+          // Fluida limita también los píxeles en celulares; Alta permite mayor definición.
+          dpr={[1, quality === 'alta' ? 1.5 : 1]}
           camera={{ fov: FOV, near: 0.06, far: 1500 }}
           // Sin antialiasing propio: lo hace el búfer del postproceso (ArchvizPost). Tener los dos
           // duplicaba memoria de video y trabajo en cada cuadro.

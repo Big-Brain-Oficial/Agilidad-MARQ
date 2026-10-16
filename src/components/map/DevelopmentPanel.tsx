@@ -28,11 +28,25 @@ interface Props {
   enVistaGeneral: boolean;
   /** Deselecciona y lleva el mapa a la vista general. */
   onVistaGeneral: () => void;
+  /** Panel plegado (sólo en celular): deja casi toda la pantalla al mapa. */
+  colapsado: boolean;
+  onToggleColapso: () => void;
 }
 
-export function DevelopmentPanel({ desarrollos, visibles, filtro, onFiltro, selected, hoveredId, onSelect, onHover, onEnter3D, enVistaGeneral, onVistaGeneral }: Props) {
+export function DevelopmentPanel({ desarrollos, visibles, filtro, onFiltro, selected, hoveredId, onSelect, onHover, onEnter3D, enVistaGeneral, onVistaGeneral, colapsado, onToggleColapso }: Props) {
   return (
-    <aside className={styles.panel} aria-label="Desarrollos de MARQ">
+    <aside className={styles.panel} data-colapsado={colapsado || undefined} aria-label="Desarrollos de MARQ">
+      {/* Tirador para plegar/desplegar el panel en el celular; en escritorio queda oculto. */}
+      <button
+        type="button"
+        className={styles.panelHandle}
+        onClick={onToggleColapso}
+        aria-expanded={!colapsado}
+        aria-label={colapsado ? 'Mostrar los desarrollos' : 'Ocultar los desarrollos para ver el mapa'}
+      >
+        <span className={styles.panelHandleGrip} aria-hidden="true" />
+        <span className={styles.panelHandleText}>{colapsado ? 'Ver desarrollos' : 'Ver el mapa'}</span>
+      </button>
       <header className={styles.brand}>
         <BrandLogo className={styles.brandLogo} />
         <span className={styles.brandSub}>

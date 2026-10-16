@@ -14,7 +14,7 @@ import type { WorldData } from './prepareWorld';
 
 // Control en primera persona: mouse para mirar (pointer lock), WASD/flechas para caminar,
 // Shift para correr, E (o clic) para interactuar e I (o clic) para ver la información del objeto
-// cercano (InfoMarkers). En iPhone/iPad, joystick y arrastre para mirar (TouchControls). La cámara
+// cercano (InfoMarkers). En pantallas táctiles, joystick y arrastre para mirar (TouchControls). La cámara
 // está a la altura de los ojos y el cuerpo es una cápsula que colisiona contra el BVH del modelo.
 
 const EYE = 1.65;
@@ -366,7 +366,7 @@ export function Player({ world, debug }: { world: WorldData; debug: boolean }) {
     }
   });
 
-  // En iOS no hay pointer lock (el iPhone no lo implementa): la mirada la da el arrastre.
+  // En táctil, la mirada se controla con arrastre y no requiere pointer lock.
   if (touch) return null;
 
   // domElement explícito: por defecto drei usa el contenedor de eventos de R3F (el div que
