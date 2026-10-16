@@ -340,7 +340,12 @@ export function Player({ world, debug }: { world: WorldData; debug: boolean }) {
     let next: Interactable | null = null;
     if (!st.ride && ui.phase === 'playing') {
       const feet = st.pos.y - EYE;
-      if (shaftAt(st.pos) && Math.abs(feet - cabinFloor()) < 0.4 && world.stops.length > 1) {
+      camera.getWorldDirection(forward);
+      const panelDistance = world.elevatorPanel.distance(st.pos, forward);
+      interactionRay.set(st.pos, forward);
+      const panelObstacle = panelDistance < 2 ? world.collider.raycastFirst(interactionRay, THREE.DoubleSide) : null;
+      if (shaftAt(st.pos) && Math.abs(feet - cabinFloor()) < 0.4 && world.stops.length > 1 &&
+          panelDistance < 2 && (!panelObstacle || panelObstacle.distance > panelDistance)) {
         const target = st.level === 0 ? world.stops.length - 1 : 0;
         next = {
           label: st.level === 0 ? `Subir al departamento muestra (piso ${world.pisoDepto})` : 'Bajar al hall',

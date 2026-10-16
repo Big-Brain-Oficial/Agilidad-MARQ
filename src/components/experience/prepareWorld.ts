@@ -5,6 +5,7 @@ import { buildCabinDoors, type CabinDoors } from './cabinDoors';
 import { buildCollider, wallGeometry } from './collision';
 import { buildEntranceDoor, removeOpenLeaves, type EntranceDoor } from './entranceDoor';
 import { buildApartmentDoor, type ApartmentDoor } from './apartmentDoor';
+import { buildNeighborDoor, buildElevatorPanel, type ElevatorPanel } from './hallwayDetails';
 
 // Convierte el GLB exportado por scripts/blender/export_web.py en los datos que usa la experiencia.
 // Convenciones de nombres del GLB:
@@ -40,6 +41,7 @@ export interface WorldData {
   doors: CabinDoors;
   entrance: EntranceDoor | null;
   apartmentDoor: ApartmentDoor;
+  elevatorPanel: ElevatorPanel;
   /**
    * Paradas del ascensor (0 = hall). Cada una tiene su hueco: `cabin` es la posición del grupo de la
    * cabina en esa parada (el modelo la trae en la 0).
@@ -149,6 +151,9 @@ export function prepareWorld(scene: THREE.Object3D): WorldData {
   const panel = [...materials.values()].find((m) => m.name === 'AV_Laca_satinada');
   if (!panel) throw new Error('El modelo no tiene el material de la puerta del departamento');
   const apartmentDoor = buildApartmentDoor(scene, named('ANCLA__puerta_depto'), panel, Array.isArray(steel) ? steel[0] : steel);
+  const dark = [...materials.values()].find((m) => m.name === 'AV_Grafito');
+  if (!dark) throw new Error('El modelo no tiene el material de la botonera');
+  const elevatorPanel = buildElevatorPanel(cabin, cabinBounds, Array.isArray(steel) ? steel[0] : steel, dark, panel);
   const busDoor = bus.clone().add(BUS_DOOR);
 
   // Paredes invisibles en el borde de lo transitable (calle, vereda y terreno del edificio).
@@ -202,8 +207,10 @@ export function prepareWorld(scene: THREE.Object3D): WorldData {
   const initialLevel = 0;
   cabin.position.copy(stops[initialLevel].cabin);
 
+  const collider = buildCollider(colliders, [...walls, busBox]);
+  buildNeighborDoor(scene, named('ANCLA__puerta_depto'), collider, panel, Array.isArray(steel) ? steel[0] : steel);
   return {
-    collider: buildCollider(colliders, [...walls, busBox]),
+    collider,
     spawn: INICIO.clone(),
     lookAt: worldPos(named('ANCLA__acceso')),
     bus,
@@ -212,6 +219,7 @@ export function prepareWorld(scene: THREE.Object3D): WorldData {
     doors,
     entrance,
     apartmentDoor,
+    elevatorPanel,
     stops,
     transfer: elevatorData.transbordo ?? Infinity,
     pisoDepto: elevatorData.piso_depto ?? 0,
