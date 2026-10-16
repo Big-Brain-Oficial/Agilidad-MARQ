@@ -13,13 +13,11 @@ Proyecto académico de la UTN, desarrollado en conjunto con MARQ.
 - [Correr el proyecto](#correr-el-proyecto)
 - [Controles del recorrido](#controles-del-recorrido)
 - [Estructura](#estructura)
-- [Editar contenido](#editar-contenido)
 - [Modelo 3D](#modelo-3d)
 - [Verificación y depuración](#verificación-y-depuración)
 - [Ramas y deploy](#ramas-y-deploy)
 - [Documentación](#documentación)
 - [Equipo](#equipo)
-- [Licencia y créditos](#licencia-y-créditos)
 
 ## Qué incluye
 
@@ -126,20 +124,6 @@ El aviso `THREE.Clock: This module has been deprecated` en la consola viene de R
 
 El recorrido se carga con `next/dynamic`: el mapa nunca descarga Three.js ni el modelo.
 
-## Editar contenido
-
-| Qué | Dónde |
-|---|---|
-| Desarrollos: textos, estado, ubicación, recorrido 3D | `src/content/desarrollos.ts` |
-| Textos por zona y objetos con información | `src/content/recorridos.ts` |
-| Maquetas del mapa y escala según el zoom | `src/content/mapa-resistencia.ts` |
-| Estilo del mapa: calles, plazas, lagunas, rótulos | `public/maps/resistencia.json` |
-| Cuadros del equipo en el hall | `src/content/equipo.ts` + `public/equipo/<id>.webp` |
-
-Los textos salen de estudiomarq.com.ar y se validan con MARQ: no agregar datos (superficies, pisos, amenities) que no estén publicados. El mapa usa el campo `ubicacion` (longitud y latitud); las fuentes de cada coordenada están en [docs/MAPA.md](docs/MAPA.md).
-
-`src/content/modelos.generated.json` y `public/models/*.glb` los escribe `model:build`: no se editan a mano.
-
 ## Modelo 3D
 
 El GLB que usa la web ya está en `public/models/`. Solo hay que regenerarlo si cambia el `.blend`:
@@ -227,13 +211,3 @@ Commits en español, con un título corto y el porqué en el cuerpo.
 | Matías Rodríguez Scornik | [matias-rodriguez-scornik](https://www.linkedin.com/in/matias-rodriguez-scornik-/) |
 | Ivo Sodja | [ivo-sodja](https://www.linkedin.com/in/ivo-sodja-a94b2b306/) |
 | Jerónimo Zapata | [jeronimo-zapata](https://www.linkedin.com/in/jeronimo-zapata/) |
-
-## Licencia y créditos
-
-El **código fuente** se distribuye bajo licencia [MIT](LICENSE).
-
-Quedan fuera de esa licencia el nombre, el logo y la identidad de MARQ, los textos e imágenes tomados de estudiomarq.com.ar, el modelo de la Torre Natalini y las fotos del equipo.
-
-- Cartografía: © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, servida por [OpenFreeMap](https://openfreemap.org/) / OpenMapTiles.
-- Texturas, muebles, plantas y HDR: [Poly Haven](https://polyhaven.com/) (CC0). Origen y SHA-256 en `public/archviz/sources.json`.
-- Árboles y fondo urbano: imágenes generadas para el proyecto ([docs/URBAN-ASSETS.md](docs/URBAN-ASSETS.md)).
