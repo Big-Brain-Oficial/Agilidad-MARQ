@@ -18,7 +18,6 @@ Proyecto académico de la UTN, desarrollado en conjunto con MARQ.
 - [Verificación y depuración](#verificación-y-depuración)
 - [Ramas y deploy](#ramas-y-deploy)
 - [Documentación](#documentación)
-- [Pendientes](#pendientes)
 - [Equipo](#equipo)
 - [Licencia y créditos](#licencia-y-créditos)
 
@@ -216,28 +215,18 @@ Commits en español, con un título corto y el porqué en el cuerpo.
 | [docs/AJUSTES-DEPARTAMENTO.md](docs/AJUSTES-DEPARTAMENTO.md) | Correcciones y ambientación del departamento |
 | [GUIA_MODELO.md](modelos/Torre_Natalini/GUIA_MODELO.md) | Criterios del modelo interpretativo |
 
-## Pendientes
-
-- Regenerar el modelo con los planos reales de MARQ (planta tipo, cortes, piso del departamento).
-- Evaluar memoria y fluidez del recorrido en celulares reales de distintas gamas.
-- Recorridos 3D para otros desarrollos.
-- Iluminación horneada en Blender.
-- Lint, tests y CI (hoy solo hay chequeo de tipos y scripts de verificación manuales).
-
-Detalle en la sección 9 de [ARQUITECTURA.md](ARQUITECTURA.md).
-
 ## Equipo
 
 | Integrante | LinkedIn |
 |---|---|
-| Jerónimo Zapata | [jeronimo-zapata](https://www.linkedin.com/in/jeronimo-zapata/) |
+| Lorenzo Arduino | [lorenzo-arduino](https://www.linkedin.com/in/lorenzo-arduino-773432406/) |
+| Tomás Duarte | [tomas-duarte](https://www.linkedin.com/in/tomas-duarte-27a133237/) |
 | Paula Kozak | [paula-kozak](https://www.linkedin.com/in/paula-kozak/) |
 | Matías Lima | [matias-lima](https://www.linkedin.com/in/matias-lima-266108375/) |
-| Tomás Duarte | [tomas-duarte](https://www.linkedin.com/in/tomas-duarte-27a133237/) |
-| Lorenzo Arduino | [lorenzo-arduino](https://www.linkedin.com/in/lorenzo-arduino-773432406/) |
+| Gonzalo Orban | [gonzaorban](https://www.linkedin.com/in/gonzaorban/) |
 | Matías Rodríguez Scornik | [matias-rodriguez-scornik](https://www.linkedin.com/in/matias-rodriguez-scornik-/) |
 | Ivo Sodja | [ivo-sodja](https://www.linkedin.com/in/ivo-sodja-a94b2b306/) |
-| Gonzalo Orban | [gonzaorban](https://www.linkedin.com/in/gonzaorban/) |
+| Jerónimo Zapata | [jeronimo-zapata](https://www.linkedin.com/in/jeronimo-zapata/) |
 
 ## Licencia y créditos
 
