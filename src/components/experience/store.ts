@@ -19,6 +19,8 @@ interface ExperienceState {
   infoOpen: string | null;
   /** Objeto cuyo símbolo «i» está bajo la mira (se abre con un clic), o null. */
   aim: string | null;
+  /** Cuadro del equipo bajo la mira: su perfil de LinkedIn se abre con un clic (o null). */
+  linkAim: { nombre: string; linkedin: string } | null;
   /** El navegador rechazó capturar el mouse (se puede reintentar con otro clic). */
   lockError: boolean;
   /** Bloquea el puntero (lo registra el control de primera persona). En táctil sólo empieza a jugar. */
@@ -47,6 +49,7 @@ interface ExperienceState {
   setRiding: (riding: boolean) => void;
   setInfo: (info: string | null) => void;
   setAim: (aim: string | null) => void;
+  setLinkAim: (linkAim: { nombre: string; linkedin: string } | null) => void;
   /** Abre la tarjeta del objeto indicado (o del que se mira), o cierra la que está abierta. */
   toggleInfo: (id?: string) => void;
   closeInfo: () => void;
@@ -64,6 +67,7 @@ export const useExperience = create<ExperienceState>((set, get) => ({
   info: null,
   infoOpen: null,
   aim: null,
+  linkAim: null,
   lockError: false,
   lock: () => {},
   // Táctil arranca en «Fluida»: sin SSAO ni sombras, que en el teléfono cuestan batería y memoria.
@@ -94,6 +98,10 @@ export const useExperience = create<ExperienceState>((set, get) => ({
   setAim: (aim) => {
     if (get().aim !== aim) set({ aim });
   },
+  setLinkAim: (linkAim) => {
+    const prev = get().linkAim;
+    if (prev?.linkedin !== linkAim?.linkedin) set({ linkAim });
+  },
   toggleInfo: (id) => set(({ info, infoOpen }) => ({ infoOpen: infoOpen ? null : (id ?? info) })),
   closeInfo: () => {
     if (get().infoOpen) set({ infoOpen: null });
@@ -102,8 +110,8 @@ export const useExperience = create<ExperienceState>((set, get) => ({
   setLock: (lock) => set({ lock }),
   leave: () => {
     if (get().phase === 'leaving') return;
-    set({ phase: 'leaving', prompt: null, info: null, infoOpen: null, aim: null });
+    set({ phase: 'leaving', prompt: null, info: null, infoOpen: null, aim: null, linkAim: null });
     if (typeof document !== 'undefined' && document.pointerLockElement) document.exitPointerLock();
   },
-  reset: () => set({ phase: 'loading', zona: 'exterior', prompt: null, riding: false, info: null, infoOpen: null, aim: null, lockError: false, hudMinimo: false, views: [], visit: () => {}, lock: () => {}, interact: () => {} }),
+  reset: () => set({ phase: 'loading', zona: 'exterior', prompt: null, riding: false, info: null, infoOpen: null, aim: null, linkAim: null, lockError: false, hudMinimo: false, views: [], visit: () => {}, lock: () => {}, interact: () => {} }),
 }));

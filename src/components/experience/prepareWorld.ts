@@ -82,6 +82,13 @@ export function prepareWorld(scene: THREE.Object3D): WorldData {
       colliders.push(o);
       return;
     }
+    // Obras decorativas del modelo sobre la pared derecha del hall: se ocultan para dejar lugar a los
+    // cuadros del equipo (Cuadros.tsx). Están al ras de la pared de piedra, así que quitarlas de las
+    // colisiones no abre ningún hueco.
+    if (/^COL__hall__(Arte_\d+|Negro)$/.test(o.name)) {
+      o.visible = false;
+      return;
+    }
     const cloneMaterial = (source: THREE.Material) => {
       if (!materials.has(source)) materials.set(source, source.clone());
       return materials.get(source)!;
