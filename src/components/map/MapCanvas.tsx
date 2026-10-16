@@ -14,6 +14,7 @@ import {
   volumenesMarq,
 } from '@/content/mapa-resistencia';
 import { desplazarCentro, proyectar, type Camara } from './encuadre';
+import { FullscreenButton } from '@/components/ui/FullscreenButton';
 import { MinusIcon, OverviewIcon, PlusIcon, TipoIcon } from './icons';
 import styles from './MapHub.module.css';
 
@@ -582,6 +583,7 @@ export const MapCanvas = forwardRef<MapCanvasHandle, Props>(function MapCanvas(p
         <button type="button" className={styles.controlOverview} aria-label="Vista general" title="Vista general: todos los desarrollos" onClick={props.onIrAVistaGeneral}>
           <OverviewIcon />
         </button>
+        <FullscreenButton />
       </div>
       <ul className={styles.markers} data-compact={compacto || undefined} aria-label="Desarrollos ubicados en el mapa">
         {grupos.map((g) => {

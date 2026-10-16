@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, type PointerEvent } from 'react';
+import { FullscreenButton } from '@/components/ui/FullscreenButton';
 import { useExperience } from './store';
 import { touchInput } from './touchInput';
 import styles from './Experience.module.css';
@@ -123,12 +124,41 @@ export function TouchControls() {
       <div ref={base} className={styles.stick} data-run="false" aria-hidden="true">
         <div ref={knob} className={styles.stickKnob} />
       </div>
-      <button type="button" className={styles.pause} onClick={pause} aria-label="Pausa">
-        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-          <rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor" />
-          <rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor" />
-        </svg>
-      </button>
+      <div className={styles.topButtons}>
+        <MinimizeButton />
+        <FullscreenButton className={styles.topButton} />
+        <button type="button" className={styles.topButton} onClick={pause} aria-label="Pausa">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor" />
+            <rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor" />
+          </svg>
+        </button>
+      </div>
     </>
+  );
+}
+
+// Pliega el HUD decorativo (marca, zona, ayuda) para despejar la pantalla sin pausar el recorrido.
+function MinimizeButton() {
+  const minimo = useExperience((s) => s.hudMinimo);
+  return (
+    <button
+      type="button"
+      className={styles.topButton}
+      onClick={() => useExperience.getState().toggleHudMinimo()}
+      aria-pressed={minimo}
+      aria-label={minimo ? 'Mostrar la información en pantalla' : 'Ocultar la información para despejar la pantalla'}
+    >
+      {minimo ? (
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 12s3.5-7 9-7 9 7 9 7-3.5 7-9 7-9-7-9-7Z" />
+          <circle cx="12" cy="12" r="2.5" />
+        </svg>
+      ) : (
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 3l18 18M10.6 5.2A9 9 0 0 1 12 5c5.5 0 9 7 9 7a16 16 0 0 1-2.6 3.3M6.5 6.6A16 16 0 0 0 3 12s3.5 7 9 7a9 9 0 0 0 3.3-.6M9.9 9.9a2.5 2.5 0 0 0 3.5 3.5" />
+        </svg>
+      )}
+    </button>
   );
 }

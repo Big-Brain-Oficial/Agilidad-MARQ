@@ -18,6 +18,8 @@ export function MapHub() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [enVistaGeneral, setEnVistaGeneral] = useState(true);
+  // En celular el panel se puede plegar para dejarle casi toda la pantalla al mapa (issue #41).
+  const [panelColapsado, setPanelColapsado] = useState(false);
 
   // Si venimos del 3D (en el MARQ Bus), la cortina está cerrada: se abre al montar el mapa.
   useEffect(() => {
@@ -61,7 +63,11 @@ export function MapHub() {
 
   const select = useCallback((d: Desarrollo | null) => {
     setSelectedId(d?.id ?? null);
-    if (d) void mapRef.current?.focus(d);
+    // Elegir una maqueta despliega el panel para que se vea la ficha, aunque estuviera plegado.
+    if (d) {
+      setPanelColapsado(false);
+      void mapRef.current?.focus(d);
+    }
   }, []);
 
   // El mapa selecciona el desarrollo. La entrada al recorrido queda en su ficha.
@@ -111,6 +117,8 @@ export function MapHub() {
         onEnter3D={enter3D}
         enVistaGeneral={enVistaGeneral}
         onVistaGeneral={vistaGeneral}
+        colapsado={panelColapsado}
+        onToggleColapso={() => setPanelColapsado((v) => !v)}
       />
     </main>
   );

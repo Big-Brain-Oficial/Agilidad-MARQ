@@ -46,6 +46,7 @@ export default function Experience({ desarrollo, debug = false }: { desarrollo: 
   const [rendererReady, setRendererReady] = useState(false);
   const quality = useExperience((s) => s.quality);
   const touch = useExperience((s) => s.touch);
+  const hudMinimo = useExperience((s) => s.hudMinimo);
 
   useLayoutEffect(() => {
     useExperience.getState().reset();
@@ -63,7 +64,7 @@ export default function Experience({ desarrollo, debug = false }: { desarrollo: 
   }, []);
 
   return (
-    <div className={styles.root} data-touch={touch || undefined}>
+    <div className={styles.root} data-touch={touch || undefined} data-min={hudMinimo || undefined}>
       <div id="marq-lock-target" className={styles.canvas}>
         <Canvas
           shadows={quality === 'alta' ? 'percentage' : false}

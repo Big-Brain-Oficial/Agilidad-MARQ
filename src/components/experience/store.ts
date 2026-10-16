@@ -26,6 +26,9 @@ interface ExperienceState {
   /** Controles táctiles (Android, iPhone/iPad) en lugar de mouse y teclado. */
   touch: boolean;
   setTouch: (touch: boolean) => void;
+  /** HUD reducido: oculta lo decorativo (marca, zona, ayuda) para despejar la pantalla del celular. */
+  hudMinimo: boolean;
+  toggleHudMinimo: () => void;
   /** Ejecuta la acción disponible, como la tecla E (lo registra el visitante). */
   interact: () => void;
   setInteract: (interact: () => void) => void;
@@ -66,6 +69,8 @@ export const useExperience = create<ExperienceState>((set, get) => ({
   // Táctil arranca en «Fluida»: sin SSAO ni sombras, que en el teléfono cuestan batería y memoria.
   touch: false,
   setTouch: (touch) => set(touch ? { touch, quality: 'fluida' } : { touch }),
+  hudMinimo: false,
+  toggleHudMinimo: () => set((s) => ({ hudMinimo: !s.hudMinimo })),
   interact: () => {},
   setInteract: (interact) => set({ interact }),
   quality: 'alta',
@@ -100,5 +105,5 @@ export const useExperience = create<ExperienceState>((set, get) => ({
     set({ phase: 'leaving', prompt: null, info: null, infoOpen: null, aim: null });
     if (typeof document !== 'undefined' && document.pointerLockElement) document.exitPointerLock();
   },
-  reset: () => set({ phase: 'loading', zona: 'exterior', prompt: null, riding: false, info: null, infoOpen: null, aim: null, lockError: false, views: [], visit: () => {}, lock: () => {}, interact: () => {} }),
+  reset: () => set({ phase: 'loading', zona: 'exterior', prompt: null, riding: false, info: null, infoOpen: null, aim: null, lockError: false, hudMinimo: false, views: [], visit: () => {}, lock: () => {}, interact: () => {} }),
 }));

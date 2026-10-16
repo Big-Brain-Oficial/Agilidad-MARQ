@@ -1,0 +1,19 @@
+/* Botón redondo de pantalla completa. Cada contenedor lo ubica con una clase propia. */
+.fullscreen {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid #e1d4c2;
+  border-radius: 12px;
+  background: rgba(255, 253, 247, 0.92);
+  color: var(--ink);
+  box-shadow: 0 4px 14px rgba(65, 54, 36, 0.12);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.fullscreen:hover {
+  background: #f4ead7;
+  color: #8a6a3b;
+}

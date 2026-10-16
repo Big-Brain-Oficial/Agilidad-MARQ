@@ -529,6 +529,11 @@
   background: var(--paper);
 }
 
+/* Tirador del panel: sólo en celular (en escritorio el panel no se pliega). */
+.panelHandle {
+  display: none;
+}
+
 .brand {
   display: flex;
   align-items: center;
@@ -828,6 +833,42 @@
     border-left: 0;
     border-top: 1px solid var(--line);
     overflow: visible;
+  }
+
+  /* Tirador visible: una barra tocable arriba del panel para plegarlo/desplegarlo. */
+  .panelHandle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 20px;
+    border: 0;
+    background: var(--paper);
+    color: var(--ink-soft);
+    font: 700 12px/1 var(--font-display);
+    letter-spacing: 0.04em;
+    cursor: pointer;
+  }
+  .panelHandleGrip {
+    width: 36px;
+    height: 4px;
+    border-radius: 999px;
+    background: #cfc8bb;
+  }
+
+  /* Panel plegado: el mapa se queda con casi toda la pantalla y el panel muestra sólo el tirador. */
+  .hub:has(.panel[data-colapsado]) {
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+  .hub:has(.panel[data-colapsado]) .mapArea {
+    min-height: 0;
+  }
+  .panel[data-colapsado] {
+    overflow: hidden;
+  }
+  .panel[data-colapsado] > :not(.panelHandle) {
+    display: none;
   }
   .brand {
     padding: 18px 20px;
