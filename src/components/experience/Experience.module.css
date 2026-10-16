@@ -383,20 +383,34 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
 }
 
-.pause {
+/* Botones de arriba a la derecha: minimizar HUD, pantalla completa y pausa. */
+.topButtons {
   position: absolute;
   top: calc(18px + env(safe-area-inset-top));
   right: calc(18px + env(safe-area-inset-right));
+  display: flex;
+  gap: 10px;
+}
+.topButton {
   display: grid;
   place-items: center;
   width: 46px;
   height: 46px;
+  padding: 0;
   border: 0;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.9);
   color: var(--ink);
   box-shadow: var(--shadow);
   cursor: pointer;
+}
+
+/* HUD minimizado: se ocultan los elementos decorativos para despejar la pantalla (issue #41).
+   Siguen visibles el joystick, la mira, los avisos de interacción, la tarjeta de info y los botones. */
+.root[data-min] .brand,
+.root[data-min] .zone,
+.root[data-min] .help {
+  display: none;
 }
 
 /* En táctil los avisos son botones que se tocan. */
@@ -437,15 +451,16 @@
   .root[data-touch] .brand {
     top: calc(12px + env(safe-area-inset-top));
     left: calc(12px + env(safe-area-inset-left));
-    max-width: calc(100% - 90px);
+    max-width: calc(100% - 180px);
     padding: 8px 12px 8px 10px;
   }
   .root[data-touch] .brandLogo {
     height: 26px;
   }
-  .root[data-touch] .pause {
+  .root[data-touch] .topButtons {
     top: calc(12px + env(safe-area-inset-top));
     right: calc(12px + env(safe-area-inset-right));
+    gap: 8px;
   }
   .root[data-touch] .zone {
     left: 12px;
