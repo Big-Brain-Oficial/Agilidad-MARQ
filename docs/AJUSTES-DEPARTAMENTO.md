@@ -20,6 +20,20 @@ Se conservan las medidas interiores de los ambientes. Las medidas del mobiliario
 
 ## Verificación
 
+### Puerta del vecino y botonera del ascensor
+
+Agregadas en `feat/puerta-vecino-botonera-ascensor`, desde `main` en `65f6590`.
+
+- La puerta del vecino está enfrentada a la entrada del departamento. Su posición se obtiene del muro existente por raycast; tiene marco, molduras, manija y mirilla. Es decorativa, no ofrece ninguna acción y conserva la colisión del muro.
+- La botonera está sobre el lateral derecho de la cabina, cerca del acceso, y viaja con ella. Al apuntarla desde dentro, E/clic inicia el viaje hacia la otra parada; en celular se usa el botón del HUD. Apuntar a otra parte de la cabina no activa el ascensor.
+- Se agregan cinco mallas agrupadas por material (dos para la puerta y tres para la botonera), sin texturas ni luces adicionales. El GLB y los archivos de Blender permanecen iguales.
+
+Con el build servido en `:3100`, `node scripts/verify-elevator-panel.mjs` verifica subida y bajada, E/clic, botones táctiles emulados, ausencia de interacción en la puerta del vecino y paso libre por el pasillo. Las capturas y el informe quedan en `.cache/elevator-panel/`. La emulación no reemplaza la prueba en un dispositivo móvil real.
+
+Resultado: tipos, build, viaje de ida y vuelta en escritorio y emulación táctil, colisión del frente decorativo e inicio/pausa sin `?debug` aprobados en Chrome. Se revisaron las capturas de ambas paradas y de la puerta del vecino.
+
+### Geometría y circulación del departamento
+
 La comprobación de geometría se ejecuta sobre la escena reconstruida en memoria:
 
 ```powershell

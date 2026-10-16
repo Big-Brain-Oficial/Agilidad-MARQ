@@ -21,7 +21,7 @@ function Controls() {
           <span><kbd>Derecha</kbd></span> Arrastrá para mirar alrededor
         </li>
         <li>
-          <span><kbd>Botón</kbd></span> Abrir puerta · usar ascensor · subir al bus
+          <span><kbd>Botón</kbd></span> Apuntá a la puerta o botonera para usarlas · subir al bus
         </li>
         <li>
           <span><kbd>Tocá</kbd></span> Información de los objetos con el símbolo «i»
@@ -44,7 +44,7 @@ function Controls() {
         <span><kbd>Shift</kbd></span> Correr
       </li>
       <li>
-        <span><kbd>E</kbd></span> Abrir puerta · usar ascensor · subir al bus
+        <span><kbd>E</kbd></span> Apuntá a la puerta o botonera para usarlas · subir al bus
       </li>
       <li>
         <span><kbd>Clic</kbd><kbd>I</kbd></span> Información de los objetos con el símbolo «i»
