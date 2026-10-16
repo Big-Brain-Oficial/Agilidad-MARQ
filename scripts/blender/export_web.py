@@ -167,6 +167,8 @@ def anchor(name, loc, scale=(1, 1, 1), **props):
 anchor('ANCLA__inicio', (-6.4, -1.4, 0))
 anchor('ANCLA__acceso', (0.15, 0.4, 1.6))
 anchor('ANCLA__bus', (-11.8, -4.75, -0.11))
+apartment_door = json.loads(S['ARCHVIZ_DOOR'])
+anchor('ANCLA__puerta_depto', apartment_door['position'], width=apartment_door['width'], height=apartment_door['height'])
 anchor('ZONA__hall', (0.15, 4.29, 2.25), (3.05, 4.19, 2.25))
 # Ascensor (lo arma rebuild_archviz.py): cada parada tiene su hueco. La cabina cambia de hueco
 # a la altura `transbordo`, con las puertas cerradas.

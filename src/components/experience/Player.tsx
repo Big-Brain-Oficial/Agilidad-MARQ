@@ -101,7 +101,7 @@ export function Player({ world, debug }: { world: WorldData; debug: boolean }) {
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       pressed.current.add(e.code);
-      if (e.code === 'KeyE' && useExperience.getState().phase === 'playing') current.current?.action();
+      if (e.code === 'KeyE' && !e.repeat && useExperience.getState().phase === 'playing') current.current?.action();
       if (e.code === 'KeyI' && !e.repeat && useExperience.getState().phase === 'playing') useExperience.getState().toggleInfo();
       if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault();
     };
@@ -191,6 +191,7 @@ export function Player({ world, debug }: { world: WorldData; debug: boolean }) {
   const euler = useRef(new THREE.Euler(0, 0, 0, 'YXZ')).current;
 
   const moved = useRef(new THREE.Vector3()).current;
+  const interactionRay = useRef(new THREE.Ray()).current;
 
   // Cada parada tiene su hueco; las cajas abarcan solo la altura de su piso.
   const shaftAt = (p: THREE.Vector3) => world.stops.find((stop) => stop.shaft.containsPoint(p))?.shaft ?? null;
@@ -266,6 +267,7 @@ export function Player({ world, debug }: { world: WorldData; debug: boolean }) {
 
       st.prev.copy(st.pos);
       world.entrance?.update(st.pos, dt);
+      if (canMove) world.apartmentDoor.update(st.pos, dt, RADIUS);
       const h = dt / SUBSTEPS;
       for (let i = 0; i < SUBSTEPS; i++) {
         st.vel.y = st.onGround ? GRAVITY * h : st.vel.y + GRAVITY * h;
@@ -289,6 +291,8 @@ export function Player({ world, debug }: { world: WorldData; debug: boolean }) {
         };
         local(world.doors.collider, world.cabin.position);
         for (const leaf of world.entrance?.leaves ?? []) local(leaf.collider, leaf.mesh.position);
+        world.apartmentDoor.resolve(start, end, RADIUS, movingDelta);
+        delta.add(movingDelta);
 
         st.onGround = delta.y > Math.abs(h * st.vel.y * 0.25);
         const offset = Math.max(0, delta.length() - 1e-5);
@@ -347,6 +351,17 @@ export function Player({ world, debug }: { world: WorldData; debug: boolean }) {
         };
       } else if (st.pos.distanceTo(world.busDoor.clone().setY(st.pos.y)) < 2.2) {
         next = { label: 'Subir al MARQ Bus · volver al mapa', action: () => useExperience.getState().leave() };
+      }
+      if (!next) {
+        camera.getWorldDirection(forward);
+        const distance = world.apartmentDoor.distance(st.pos, forward);
+        if (distance < 2) {
+          interactionRay.set(st.pos, forward);
+          const obstacle = world.collider.raycastFirst(interactionRay, THREE.DoubleSide);
+          if (!obstacle || obstacle.distance > distance) {
+            next = { label: world.apartmentDoor.label, action: world.apartmentDoor.toggle };
+          }
+        }
       }
     }
     current.current = next;
