@@ -1,6 +1,7 @@
 'use client';
 
 import { TIPOS, type Desarrollo } from '@/content/desarrollos';
+import { EQUIPO } from '@/content/equipo';
 import { BrandLogo } from '@/components/brand/BrandLogo';
 import { ArrowIcon, OverviewIcon, TipoIcon } from './icons';
 import styles from './MapHub.module.css';
@@ -14,6 +15,9 @@ const FILTROS: { id: Filtro; label: string }[] = [
   { id: 'casas', label: 'Casas' },
   { id: 'futuro', label: 'Próximamente' },
 ];
+
+// Sólo quienes cargaron un correo en equipo.ts.
+const CONTACTOS = EQUIPO.filter((m) => m.correo);
 
 interface Props {
   desarrollos: Desarrollo[];
@@ -146,8 +150,21 @@ export function DevelopmentPanel({ desarrollos, visibles, filtro, onFiltro, sele
         </section>
       )}
 
-      <footer className={styles.disclaimer}>
-        Muestra académica. Sitio no oficial, sin relación con MARQ.
+      <footer className={styles.footer}>
+        {CONTACTOS.length > 0 && (
+          <section className={styles.contacto} aria-labelledby="contacto-equipo">
+            <h2 id="contacto-equipo" className={styles.contactoTitle}>Contacto del equipo</h2>
+            <ul className={styles.contactoList}>
+              {CONTACTOS.map((m) => (
+                <li key={m.id}>
+                  <span>{m.nombre}</span>
+                  <a className={styles.link} href={`mailto:${m.correo}`}>{m.correo}</a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+        <p className={styles.disclaimer}>Muestra académica. Sitio no oficial, sin relación con MARQ.</p>
       </footer>
     </aside>
   );

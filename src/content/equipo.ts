@@ -10,6 +10,8 @@ export interface MiembroEquipo {
   nombre: string;
   /** Perfil de LinkedIn que abre el cuadro. */
   linkedin: string;
+  /** Correo público: quien lo tenga aparece en «Contacto del equipo» del panel del mapa. */
+  correo?: string;
 }
 
 export const EQUIPO: MiembroEquipo[] = [
@@ -23,5 +25,5 @@ export const EQUIPO: MiembroEquipo[] = [
   { id: 'lorenzo-arduino', nombre: 'Lorenzo Arduino', linkedin: 'https://www.linkedin.com/in/lorenzo-arduino-773432406/' },
   { id: 'matias-rodriguez-scornik', nombre: 'Matías Rodríguez Scornik', linkedin: 'https://www.linkedin.com/in/matias-rodriguez-scornik-/' },
   { id: 'ivo-sodja', nombre: 'Ivo Sodja', linkedin: 'https://www.linkedin.com/in/ivo-sodja-a94b2b306/' },
-  { id: 'gonzalo-orban', nombre: 'Gonzalo Orban', linkedin: 'https://www.linkedin.com/in/gonzaorban/' },
+  { id: 'gonzalo-orban', nombre: 'Gonzalo Orban', linkedin: 'https://www.linkedin.com/in/gonzaorban/', correo: 'gonzaorban@gmail.com' },
 ];
