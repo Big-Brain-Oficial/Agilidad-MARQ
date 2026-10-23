@@ -18,6 +18,7 @@ Proyecto académico de la UTN, desarrollado en conjunto con MARQ.
 - [Ramas y deploy](#ramas-y-deploy)
 - [Documentación](#documentación)
 - [Equipo](#equipo)
+- [Contacto](#contacto)
 
 ## Qué incluye
 
@@ -211,3 +212,11 @@ Commits en español, con un título corto y el porqué en el cuerpo.
 | Matías Rodríguez Scornik | [matias-rodriguez-scornik](https://www.linkedin.com/in/matias-rodriguez-scornik-/) |
 | Ivo Sodja | [ivo-sodja](https://www.linkedin.com/in/ivo-sodja-a94b2b306/) |
 | Jerónimo Zapata | [jeronimo-zapata](https://www.linkedin.com/in/jeronimo-zapata/) |
+
+## Contacto
+
+Para consultas sobre el proyecto, escribile al equipo:
+
+| Integrante | Correo |
+|---|---|
+| Gonzalo Orban | [gonzaorban@gmail.com](mailto:gonzaorban@gmail.com) |
